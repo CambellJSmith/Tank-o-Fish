@@ -1,0 +1,142 @@
+.tank-status {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    gap: 10px;
+    margin: 0 5px 14px;
+}
+
+.status-meter,
+.tank-counts {
+    padding: 10px 12px;
+    border: 1px solid rgba(95, 133, 146, 0.14);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.58);
+}
+
+.status-meter > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 0.76rem;
+}
+
+.status-meter strong,
+.tank-counts strong {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.status-meter progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    border: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e5eeec;
+}
+
+.status-meter progress::-webkit-progress-bar {
+    background: #e5eeec;
+}
+
+.status-meter progress::-webkit-progress-value {
+    border-radius: 999px;
+    background: #5cae95;
+}
+
+.status-meter progress::-moz-progress-bar {
+    border-radius: 999px;
+    background: #5cae95;
+}
+
+.status-meter--hunger progress::-webkit-progress-value {
+    background: #d99b52;
+}
+
+.status-meter--hunger progress::-moz-progress-bar {
+    background: #d99b52;
+}
+
+.status-meter--health progress::-webkit-progress-value {
+    background: #6fa8b8;
+}
+
+.status-meter--health progress::-moz-progress-bar {
+    background: #6fa8b8;
+}
+
+.tank-counts {
+    display: grid;
+    align-content: center;
+    gap: 5px;
+    min-width: 108px;
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.tank-dirt {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    opacity: var(--tank-dirt-opacity, 0);
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 18% 35%, rgba(83, 82, 35, 0.22) 0 3px, transparent 4px),
+        radial-gradient(circle at 76% 64%, rgba(88, 83, 39, 0.2) 0 4px, transparent 5px),
+        linear-gradient(180deg, rgba(95, 105, 56, 0.2), rgba(86, 77, 39, 0.66));
+    transition: opacity 500ms linear;
+}
+
+.supply-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 16px;
+    padding: 18px 20px;
+    border: 1px solid var(--panel-border);
+    border-radius: 28px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+}
+
+.fish.is-hungry .fish-sprite {
+    filter: drop-shadow(0 5px 3px rgba(31, 83, 95, 0.18)) saturate(0.82);
+}
+
+.fish.is-unwell .fish-sprite {
+    filter: drop-shadow(0 5px 3px rgba(31, 83, 95, 0.18)) saturate(0.55) grayscale(0.18);
+}
+
+@media (max-width: 820px) {
+    .tank-status {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tank-counts {
+        grid-column: span 2;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 720px) {
+    .supply-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 560px) {
+    .tank-status {
+        grid-template-columns: 1fr;
+    }
+
+    .tank-counts {
+        grid-column: auto;
+    }
+}
