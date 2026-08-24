@@ -71,9 +71,10 @@
 
 .tank-counts {
     display: grid;
+    grid-template-columns: repeat(3, auto);
     align-content: center;
-    gap: 5px;
-    min-width: 108px;
+    gap: 5px 10px;
+    min-width: 150px;
     color: var(--muted);
     font-size: 0.78rem;
 }
@@ -113,6 +114,27 @@
     filter: drop-shadow(0 5px 3px rgba(31, 83, 95, 0.18)) saturate(0.55) grayscale(0.18);
 }
 
+.fish.is-ill .fish-sprite {
+    filter: drop-shadow(0 0 7px rgba(108, 79, 126, 0.62)) saturate(0.42) grayscale(0.28);
+}
+
+.fish.is-ill::after {
+    content: "+";
+    position: absolute;
+    top: -5px;
+    right: 2px;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: white;
+    background: rgba(157, 86, 111, 0.9);
+    font-size: 0.76rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
 @media (max-width: 820px) {
     .tank-status {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -120,7 +142,7 @@
 
     .tank-counts {
         grid-column: span 2;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
@@ -138,5 +160,6 @@
 
     .tank-counts {
         grid-column: auto;
+        grid-template-columns: 1fr;
     }
 }
