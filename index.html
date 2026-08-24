@@ -34,7 +34,7 @@
                     <p class="eyebrow">your_tank</p>
                     <h2 id="tank-heading">home_aquarium</h2>
                 </div>
-                <p class="tank-help">click_a_fish_to_inspect_it._dirty_water_and_repeated_underfeeding_can_make_fish_ill.</p>
+                <p class="tank-help">click_fish_to_inspect_them._drag_and_hold_care_supplies_from_the_cupboard_to_use_them_in_the_water.</p>
             </div>
 
             <div class="tank-status" aria-label="tank_status">
@@ -128,9 +128,10 @@
         </section>
 
         <section class="supply-card" aria-labelledby="supply-heading">
-            <div>
+            <div class="supply-card__heading">
                 <p class="eyebrow">care_supplies</p>
                 <h2 id="supply-heading">tank_cupboard</h2>
+                <p class="supply-help">drag_food_and_release_it_in_the_tank._hold_the_sponge_over_dirt_and_scrub._hold_medicine_over_the_water_and_move_the_spray_through_ill_fish.</p>
             </div>
             <div id="supply-inventory" class="supply-inventory"></div>
         </section>
@@ -145,7 +146,7 @@
             <button class="icon-button" type="submit" aria-label="close_shop">×</button>
         </form>
 
-        <p class="shop-dialog__intro">buy_mystery_eggs_to_discover_fish_and_supplies_to_keep_the_tank_healthy.</p>
+        <p class="shop-dialog__intro">buy_mystery_eggs_to_discover_fish_and_supplies_you_physically_use_in_the_tank.</p>
 
         <section class="shop-section" aria-labelledby="egg-shop-heading">
             <div class="shop-section__heading">
@@ -158,7 +159,7 @@
         <section class="shop-section" aria-labelledby="supply-shop-heading">
             <div class="shop-section__heading">
                 <h3 id="supply-shop-heading">care_supplies</h3>
-                <span>food · cleaning · treatment</span>
+                <span>drag · scrub · spray</span>
             </div>
             <div id="supply-shop-list" class="shop-list shop-list--supplies"></div>
         </section>
