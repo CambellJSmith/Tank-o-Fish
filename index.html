@@ -34,7 +34,7 @@
                     <p class="eyebrow">your_tank</p>
                     <h2 id="tank-heading">home_aquarium</h2>
                 </div>
-                <p class="tank-help">click_fish_to_inspect_them._drag_and_hold_care_supplies_from_the_cupboard_to_use_them_in_the_water.</p>
+                <p class="tank-help">click_fish_to_inspect_or_sell_them._larger_heavier_healthier_rarer_fish_are_worth_more.</p>
             </div>
 
             <div class="tank-status" aria-label="tank_status">
@@ -94,8 +94,12 @@
                     </div>
 
                     <div class="fish-info-summary">
+                        <span>rarity_<strong id="fish-info-rarity">common</strong></span>
                         <span>stage_<strong id="fish-info-stage">growing</strong></span>
                         <span>condition_<strong id="fish-info-condition">healthy</strong></span>
+                        <span>illnesses_<strong id="fish-info-illnesses">0</strong></span>
+                        <span>size_<strong id="fish-info-size">0_cm</strong></span>
+                        <span>weight_<strong id="fish-info-weight">0_g</strong></span>
                         <span>appetite_<strong id="fish-info-appetite">0_hunger_per_minute</strong></span>
                     </div>
 
@@ -112,6 +116,14 @@
                             <div><span>health</span><strong id="fish-info-health-value">100%</strong></div>
                             <progress id="fish-info-health-meter" max="100" value="100">100%</progress>
                         </article>
+                    </div>
+
+                    <div class="fish-info-sale">
+                        <div>
+                            <span>current_value</span>
+                            <strong id="fish-info-sale-value">0_coins</strong>
+                        </div>
+                        <button id="fish-info-sell" class="fish-info-sell" type="button">sell_fish</button>
                     </div>
                 </div>
             </aside>
