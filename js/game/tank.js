@@ -91,13 +91,7 @@ export class Tank {
             const radius = Math.random() * 34;
             const x = Math.max(12, Math.min(bounds.width - 12, center_x + (Math.cos(angle) * radius)));
             const y = Math.max(18, Math.min(bounds.height - 82, center_y + (Math.sin(angle) * radius)));
-            const pellet = new FoodPellet({
-                parent: this.#entity_layer,
-                x,
-                y,
-                nutrition: 15
-            });
-
+            const pellet = new FoodPellet({ parent: this.#entity_layer, x, y, nutrition: 15 });
             this.#food.add(pellet);
             pellet.mount();
         }
@@ -170,7 +164,6 @@ export class Tank {
             if (!fish.is_ill) {
                 continue;
             }
-
             const center = fish.center;
             const hit_distance = distance_to_segment(center.x, center.y, start_x, start_y, end_x, end_y);
             if (hit_distance <= MEDICINE_RADIUS && fish.cure_illness()) {
@@ -181,7 +174,6 @@ export class Tank {
         if (cured_count > 0) {
             this.#emit_status();
         }
-
         return { sprayed: true, cured_count };
     }
 
@@ -189,10 +181,25 @@ export class Tank {
         if (!this.#selected_fish) {
             return;
         }
-
         this.#selected_fish.set_selected(false);
         this.#selected_fish = null;
         this.#on_fish_selected(null);
+    }
+
+    sell_selected_fish() {
+        if (!this.#selected_fish) {
+            return null;
+        }
+
+        const sold_fish = this.#selected_fish;
+        const sold_info = sold_fish.get_info();
+        this.#selected_fish = null;
+        this.#fish.delete(sold_fish);
+        sold_fish.destroy();
+        this.#on_fish_selected(null);
+        this.#assign_food_targets();
+        this.#emit_status();
+        return sold_info;
     }
 
     #add_fish(fish_type, { start_x, start_y }) {
@@ -205,7 +212,6 @@ export class Tank {
             on_select: (selected_fish) => this.#select_fish(selected_fish),
             on_food_reached: (feeding_fish, food) => this.#eat_food(feeding_fish, food)
         });
-
         this.#fish.add(fish);
         fish.mount();
         this.#assign_food_targets();
@@ -217,7 +223,6 @@ export class Tank {
             this.#on_fish_selected(fish.get_info());
             return;
         }
-
         this.#selected_fish?.set_selected(false);
         this.#selected_fish = fish;
         this.#selected_fish.set_selected(true);
@@ -226,13 +231,11 @@ export class Tank {
 
     #hatch_fish(egg) {
         this.#eggs.delete(egg);
-
         const fish_type = roll_fish_for_egg(egg.egg_type);
         this.#add_fish(fish_type, {
             start_x: egg.x,
             start_y: Math.max(70, this.#entity_layer.clientHeight - 155)
         });
-
         this.#on_fish_hatched(fish_type);
     }
 
@@ -241,17 +244,14 @@ export class Tank {
             this.#assign_food_targets();
             return;
         }
-
         this.#food.delete(pellet);
         fish.feed(pellet.nutrition);
         this.#add_dirt(0.18);
-
         for (const other_fish of this.#fish) {
             if (other_fish.food_target === pellet) {
                 other_fish.clear_food_target(pellet);
             }
         }
-
         this.#assign_food_targets();
         this.#emit_status();
     }
@@ -271,15 +271,12 @@ export class Tank {
                 already_targeted.add(fish.food_target);
             }
         }
-
         const free_pellets = pellets.filter((pellet) => !already_targeted.has(pellet));
         let shared_index = 0;
-
         for (const fish of this.#fish) {
             if (fish.food_target && !fish.food_target.is_consumed) {
                 continue;
             }
-
             const target = free_pellets.shift() ?? pellets[shared_index % pellets.length];
             shared_index += 1;
             fish.set_food_target(target);
@@ -293,10 +290,7 @@ export class Tank {
     }
 
     #ensure_dirt_patches() {
-        const desired_count = this.#dirt_level < 2
-            ? 0
-            : Math.min(12, Math.ceil(this.#dirt_level / DIRT_PER_PATCH));
-
+        const desired_count = this.#dirt_level < 2 ? 0 : Math.min(12, Math.ceil(this.#dirt_level / DIRT_PER_PATCH));
         while (this.#dirt_patches.size < desired_count) {
             this.#create_dirt_patch();
         }
@@ -313,7 +307,6 @@ export class Tank {
         const y = top_margin + (Math.random() * Math.max(1, height - top_margin - bottom_margin));
         const element = document.createElement("span");
         const patch = { element, x, y, size, strength: 1 };
-
         element.className = "tank-dirt-patch";
         element.style.left = `${x}px`;
         element.style.top = `${y}px`;
@@ -322,7 +315,6 @@ export class Tank {
         element.style.setProperty("--patch-strength", "1");
         element.style.setProperty("--patch-rotation", `${-22 + (Math.random() * 44)}deg`);
         element.setAttribute("aria-hidden", "true");
-
         this.#dirt_patches.add(patch);
         this.#element.append(element);
     }
@@ -342,18 +334,13 @@ export class Tank {
         const delta_seconds = Math.min((now - this.#last_care_time) / 1000, 2);
         this.#last_care_time = now;
         const fish_count = this.#fish.size;
-
         if (fish_count > 0) {
-            const dirt_rate = 0.035
-                + (fish_count * 0.035)
-                + (Math.pow(fish_count, 1.3) * 0.012);
+            const dirt_rate = 0.035 + (fish_count * 0.035) + (Math.pow(fish_count, 1.3) * 0.012);
             this.#add_dirt(dirt_rate * delta_seconds);
         }
-
         for (const fish of this.#fish) {
             fish.tick_care(delta_seconds, this.#dirt_level);
         }
-
         this.#assign_food_targets();
         this.#emit_status();
     }
@@ -368,7 +355,6 @@ export class Tank {
         let total_health = 0;
         let growing_count = 0;
         let ill_count = 0;
-
         for (const fish of this.#fish) {
             total_hunger += fish.hunger;
             total_health += fish.health;
@@ -379,22 +365,11 @@ export class Tank {
                 ill_count += 1;
             }
         }
-
         const average_hunger = fish_count > 0 ? total_hunger / fish_count : 0;
         const average_health = fish_count > 0 ? total_health / fish_count : 100;
         const cleanliness = 100 - this.#dirt_level;
         this.#sync_dirt_visuals();
-
-        this.#on_status_change({
-            fish_count,
-            growing_count,
-            ill_count,
-            average_hunger,
-            average_health,
-            cleanliness,
-            dirt_level: this.#dirt_level
-        });
-
+        this.#on_status_change({ fish_count, growing_count, ill_count, average_hunger, average_health, cleanliness, dirt_level: this.#dirt_level });
         if (this.#selected_fish) {
             this.#on_fish_selected(this.#selected_fish.get_info());
         }
