@@ -16,8 +16,8 @@ export class Fish {
         this.#fish_type = fish_type;
         this.#parent = parent;
         this.#starts_grown = starts_grown;
-        this.#x = start_x - 41;
-        this.#y = start_y;
+        this.#x = Math.max(0, start_x - 41);
+        this.#y = Math.max(0, start_y);
         this.#target_x = this.#x;
         this.#target_y = this.#y;
         this.#speed = 24 + Math.random() * 12;
