@@ -42,13 +42,17 @@ function create_species(sprite_number, catalog_index) {
     const prefix_index = Math.floor(catalog_index / SPECIES_FAMILIES.length);
     const family_index = catalog_index % SPECIES_FAMILIES.length;
     const padded_number = String(sprite_number).padStart(4, "0");
+    const base_hunger_rate = 0.18 + ((catalog_index % 9) * 0.025);
+    const growth_hunger_multiplier = 1.6 + ((catalog_index % 5) * 0.12);
 
     return Object.freeze({
         species_id: `fish_${padded_number}`,
         name: `${SPECIES_PREFIXES[prefix_index]}_${SPECIES_FAMILIES[family_index]}`,
         sprite_number,
         sprite: `FishSprites/${SPRITE_PREFIX}_${padded_number}.png`,
-        growth_time_ms: 36000 + ((catalog_index % 7) * 6000)
+        growth_time_ms: 36000 + ((catalog_index % 7) * 6000),
+        base_hunger_rate,
+        growth_hunger_multiplier
     });
 }
 
