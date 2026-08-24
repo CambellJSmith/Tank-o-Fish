@@ -174,7 +174,12 @@ export class Game {
 
     #handle_medicine_interaction(interaction) {
         if (interaction.phase === "move") {
-            const result = this.#tank.spray_medicine_at(interaction.client_x, interaction.client_y);
+            const result = this.#tank.spray_medicine_at(
+                interaction.client_x,
+                interaction.client_y,
+                interaction.previous_client_x,
+                interaction.previous_client_y
+            );
             if (!result.sprayed) {
                 return {};
             }
