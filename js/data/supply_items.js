@@ -12,8 +12,8 @@ export const SUPPLY_ITEMS = Object.freeze([
         name: "cleaning_sponge",
         price: 10,
         icon: "▦",
-        interaction_hint: "hold_and_scrub_dirt_patches",
-        description: "hold_the_sponge_and_move_it_back_and_forth_over_visible_dirt_patches_to_scrub_them_away."
+        interaction_hint: "drop_into_the_tank_then_scrub_when_needed",
+        description: "drop_the_sponge_into_the_tank_and_leave_it_there._each_sponge_can_fully_clean_25_dirt_patches_across_as_many_scrub_sessions_as_you_like."
     }),
     Object.freeze({
         id: "medicine",
