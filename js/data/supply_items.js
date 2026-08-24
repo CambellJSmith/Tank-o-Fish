@@ -4,20 +4,23 @@ export const SUPPLY_ITEMS = Object.freeze([
         name: "fish_food",
         price: 6,
         icon: "●",
-        description: "one_portion_feeds_every_fish_in_the_tank_and_reduces_their_hunger."
+        interaction_hint: "drag_into_the_tank_and_release",
+        description: "drag_a_portion_into_the_tank_to_drop_food._the_fish_will_swarm_over_and_eat_the_pellets."
     }),
     Object.freeze({
         id: "sponge",
         name: "cleaning_sponge",
         price: 10,
         icon: "▦",
-        description: "one_sponge_scrubs_the_tank_clean_and_resets_the_dirt_level."
+        interaction_hint: "hold_and_scrub_dirt_patches",
+        description: "hold_the_sponge_and_move_it_back_and_forth_over_visible_dirt_patches_to_scrub_them_away."
     }),
     Object.freeze({
         id: "medicine",
         name: "fish_medicine",
         price: 14,
         icon: "+",
-        description: "one_dose_cures_one_ill_fish._once_cured_its_health_can_gradually_recover_with_good_care."
+        interaction_hint: "hold_and_spray_through_the_water",
+        description: "hold_the_medicine_over_the_tank_and_move_the_spray_through_ill_fish_to_cure_every_fish_it_hits."
     })
 ]);
