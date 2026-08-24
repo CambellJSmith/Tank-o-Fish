@@ -1,3 +1,4 @@
+import { roll_fish_for_egg } from "../data/egg_types.js";
 import { Egg } from "../entities/egg.js";
 import { Fish } from "../entities/fish.js";
 
@@ -39,34 +40,28 @@ export class Tank {
         egg.mount();
     }
 
-    add_fish(fish_type, { start_x = null, start_y = null, starts_grown = true } = {}) {
-        const width = this.#entity_layer.clientWidth;
-        const height = this.#entity_layer.clientHeight;
-        const fish_x = start_x ?? (64 + Math.random() * Math.max(1, width - 128));
-        const fish_y = start_y ?? (70 + Math.random() * Math.max(1, height - 230));
-
+    #add_fish(fish_type, { start_x, start_y }) {
         const fish = new Fish({
             fish_type,
             parent: this.#entity_layer,
-            start_x: fish_x,
-            start_y: fish_y,
-            starts_grown
+            start_x,
+            start_y,
+            starts_grown: false
         });
 
         this.#fish.add(fish);
         fish.mount();
-        return fish;
     }
 
     #hatch_fish(egg) {
         this.#eggs.delete(egg);
 
-        this.add_fish(egg.egg_type.fish, {
+        const fish_type = roll_fish_for_egg(egg.egg_type);
+        this.#add_fish(fish_type, {
             start_x: egg.x,
-            start_y: Math.max(70, this.#entity_layer.clientHeight - 155),
-            starts_grown: false
+            start_y: Math.max(70, this.#entity_layer.clientHeight - 155)
         });
 
-        this.#on_fish_hatched(egg.egg_type.fish);
+        this.#on_fish_hatched(fish_type);
     }
 }
