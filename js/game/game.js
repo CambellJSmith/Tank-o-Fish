@@ -46,7 +46,8 @@ export class Game {
 
         this.#fish_info_panel = new FishInfoPanel({
             element: document.querySelector("#fish-info-panel"),
-            on_close: () => this.#tank.clear_selection()
+            on_close: () => this.#tank.clear_selection(),
+            on_sell: () => this.#sell_selected_fish()
         });
 
         this.#tank = new Tank({
@@ -117,6 +118,17 @@ export class Game {
     #drop_egg(egg_type, client_x, client_y) {
         this.#tank.drop_egg(egg_type, client_x, client_y);
         this.#announce(`${egg_type.name}_is_settling_into_the_tank.`);
+    }
+
+    #sell_selected_fish() {
+        const sold_fish = this.#tank.sell_selected_fish();
+        if (!sold_fish) {
+            return;
+        }
+
+        this.#money += sold_fish.sale_value;
+        this.#sync_money();
+        this.#announce(`${sold_fish.name}_sold_for_${sold_fish.sale_value}_coins.`);
     }
 
     #handle_supply_interaction(interaction) {

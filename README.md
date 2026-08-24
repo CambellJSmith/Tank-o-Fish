@@ -8,7 +8,10 @@ A small vanilla HTML, CSS, and JavaScript aquarium game prototype.
 - drag an egg from the tray into the aquarium
 - release it over the water and watch it sink to the sand
 - wait for it to hatch into a random species from that egg type's hidden pool
-- click any fish in the tank to inspect its live species, growth, hunger, health, illness, and appetite information
+- click any fish in the tank to inspect its live species, rarity, growth, hunger, health, illness history, size, weight, appetite, and sale value
+- each fish has individual size and weight variation even within the same species
+- fish gain weight rapidly while growing and continue gaining weight more slowly after reaching adulthood
+- sell a selected fish for its current live value; growth, health, illness history, rarity, individual size, and weight all contribute to price
 - buy food, cleaning sponges, and medicine to care for the tank
 - drag food from the cupboard into the aquarium and release it to scatter pellets; the fish swarm toward the food and eat it
 - hold a sponge and scrub it back and forth across visible dirt patches to remove them
@@ -29,9 +32,9 @@ Then open `http://localhost:8000` in a browser.
 
 ## Structure
 
-- `index.html` — game shell, aquarium, HUD, fish info panel, inventory, and shop markup
+- `index.html` — game shell, aquarium, HUD, fish info/sale panel, inventory, and shop markup
 - `css/` — base layout, aquarium visuals, fish rendering, care interactions, fish info panel, and shop UI
-- `js/data/` — mystery egg pools, fish species, and supply definitions
+- `js/data/` — mystery egg pools, fish species, fish valuation, and supply definitions
 - `js/entities/` — egg, fish, and food-pellet runtime entities
-- `js/game/` — shop, inventories, direct care tools, tank simulation, fish inspection panel, and main game orchestration
+- `js/game/` — shop, inventories, direct care tools, tank simulation, fish inspection/selling, and main game orchestration
 - `FishSprites/` — source fish sprite artwork
