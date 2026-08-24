@@ -42,14 +42,12 @@ function create_species(sprite_number, catalog_index) {
     const prefix_index = Math.floor(catalog_index / SPECIES_FAMILIES.length);
     const family_index = catalog_index % SPECIES_FAMILIES.length;
     const padded_number = String(sprite_number).padStart(4, "0");
-    const price = 14 + (family_index * 2) + (Math.floor(catalog_index / 27) * 4);
 
     return Object.freeze({
         species_id: `fish_${padded_number}`,
         name: `${SPECIES_PREFIXES[prefix_index]}_${SPECIES_FAMILIES[family_index]}`,
         sprite_number,
         sprite: `FishSprites/${SPRITE_PREFIX}_${padded_number}.png`,
-        price,
         growth_time_ms: 36000 + ((catalog_index % 7) * 6000)
     });
 }
