@@ -1,3 +1,5 @@
+import { calculate_fish_sale_value } from "../data/fish_value.js";
+
 export class Fish {
     #fish_type;
     #parent;
@@ -12,9 +14,13 @@ export class Fish {
     #target_y;
     #speed;
     #age_ms;
+    #individual_size_factor;
+    #reference_adult_weight_g;
+    #weight_g;
     #hunger = 10 + (Math.random() * 8);
     #health = 100;
     #illness_risk = 0;
+    #illness_count = 0;
     #is_ill = false;
     #last_time = performance.now();
     #animation_frame = null;
@@ -27,6 +33,12 @@ export class Fish {
         this.#on_select = on_select;
         this.#on_food_reached = on_food_reached;
         this.#age_ms = starts_grown ? fish_type.growth_time_ms : 0;
+        this.#individual_size_factor = 0.88 + (Math.random() * 0.24);
+        const individual_weight_factor = 0.86 + (Math.random() * 0.28);
+        this.#reference_adult_weight_g = fish_type.base_adult_weight_g
+            * Math.pow(this.#individual_size_factor, 3)
+            * individual_weight_factor;
+        this.#weight_g = this.#reference_adult_weight_g * (starts_grown ? 1 : 0.28);
         this.#x = Math.max(0, start_x - 41);
         this.#y = Math.max(0, start_y);
         this.#target_x = this.#x;
@@ -44,7 +56,7 @@ export class Fish {
             requestAnimationFrame(() => {
                 const growth = this.#element.querySelector(".fish-growth");
                 growth.style.transitionDuration = `${this.#fish_type.growth_time_ms}ms`;
-                this.#element.style.setProperty("--growth-scale", "1");
+                this.#element.style.setProperty("--growth-scale", String(this.#individual_size_factor));
             });
         }
 
@@ -85,20 +97,41 @@ export class Fish {
 
     get_info() {
         const growth_progress = Math.min(100, (this.#age_ms / this.#fish_type.growth_time_ms) * 100);
+        const growth_fraction = growth_progress / 100;
         const hunger_multiplier = this.is_growing ? this.#fish_type.growth_hunger_multiplier : 1;
         const current_hunger_rate = this.#fish_type.base_hunger_rate * hunger_multiplier;
+        const length_cm = this.#fish_type.base_adult_length_cm
+            * this.#individual_size_factor
+            * (0.55 + (growth_fraction * 0.45));
+        const sale_value = calculate_fish_sale_value({
+            base_value: this.#fish_type.base_value,
+            rarity_multiplier: this.#fish_type.rarity.multiplier,
+            growth_progress,
+            health: this.#health,
+            illness_count: this.#illness_count,
+            size_factor: this.#individual_size_factor,
+            weight_g: this.#weight_g,
+            reference_adult_weight_g: this.#reference_adult_weight_g
+        });
 
         return {
             species_id: this.#fish_type.species_id,
             name: this.#fish_type.name,
             sprite: this.#fish_type.sprite,
             sprite_number: this.#fish_type.sprite_number,
+            rarity: this.#fish_type.rarity.name,
             hunger: this.#hunger,
             health: this.#health,
             is_ill: this.#is_ill,
+            illness_count: this.#illness_count,
             is_growing: this.is_growing,
             growth_progress,
-            hunger_per_minute: current_hunger_rate * 60
+            hunger_per_minute: current_hunger_rate * 60,
+            size_factor: this.#individual_size_factor,
+            size_percent: this.#individual_size_factor * 100,
+            length_cm,
+            weight_g: this.#weight_g,
+            sale_value
         };
     }
 
@@ -143,8 +176,37 @@ export class Fish {
         return true;
     }
 
+    destroy() {
+        if (this.#animation_frame !== null) {
+            cancelAnimationFrame(this.#animation_frame);
+            this.#animation_frame = null;
+        }
+
+        this.#food_target = null;
+        this.#element.remove();
+    }
+
     tick_care(delta_seconds, tank_dirt_level) {
         this.#age_ms += delta_seconds * 1000;
+        const growth_progress = Math.min(1, this.#age_ms / this.#fish_type.growth_time_ms);
+        const growth_weight_target = this.#reference_adult_weight_g
+            * (0.28 + (Math.pow(growth_progress, 1.25) * 0.72));
+
+        if (this.#weight_g < growth_weight_target) {
+            this.#weight_g = Math.min(growth_weight_target, this.#weight_g + ((growth_weight_target - this.#weight_g) * 0.35));
+        }
+
+        if (!this.is_growing) {
+            const mature_condition_multiplier = this.#is_ill
+                ? 0.45
+                : this.#hunger >= 75
+                    ? 0.65
+                    : 1;
+            const weight_gain_per_second = (this.#fish_type.adult_weight_gain_per_minute / 60)
+                * this.#individual_size_factor
+                * mature_condition_multiplier;
+            this.#weight_g += weight_gain_per_second * delta_seconds;
+        }
 
         const hunger_multiplier = this.is_growing ? this.#fish_type.growth_hunger_multiplier : 1;
         this.#hunger = Math.min(
@@ -165,6 +227,7 @@ export class Fish {
 
             if (this.#illness_risk >= 100) {
                 this.#is_ill = true;
+                this.#illness_count += 1;
             }
         }
 
@@ -186,7 +249,8 @@ export class Fish {
         const element = document.createElement("button");
         element.type = "button";
         element.className = "fish";
-        element.style.setProperty("--growth-scale", this.#starts_grown ? "1" : "0.55");
+        const starting_scale = this.#individual_size_factor * (this.#starts_grown ? 1 : 0.55);
+        element.style.setProperty("--growth-scale", String(starting_scale));
         element.style.setProperty("--facing", "1");
         element.setAttribute("aria-label", `inspect_${this.#fish_type.name}`);
         element.setAttribute("aria-pressed", "false");
