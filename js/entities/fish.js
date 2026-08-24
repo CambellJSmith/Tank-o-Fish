@@ -76,6 +76,13 @@ export class Fish {
         return this.#food_target;
     }
 
+    get center() {
+        return {
+            x: this.#x + 41,
+            y: this.#y + 30
+        };
+    }
+
     get_info() {
         const growth_progress = Math.min(100, (this.#age_ms / this.#fish_type.growth_time_ms) * 100);
         const hunger_multiplier = this.is_growing ? this.#fish_type.growth_hunger_multiplier : 1;
@@ -118,12 +125,6 @@ export class Fish {
 
         this.#food_target = null;
         this.#target_timer = 0;
-    }
-
-    is_hit_by(local_x, local_y, radius) {
-        const center_x = this.#x + 41;
-        const center_y = this.#y + 30;
-        return Math.hypot(center_x - local_x, center_y - local_y) <= radius;
     }
 
     feed(amount) {
