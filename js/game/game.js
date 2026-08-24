@@ -2,6 +2,7 @@ import { EGG_TYPES } from "../data/egg_types.js";
 import { SUPPLY_ITEMS } from "../data/supply_items.js";
 import { EggInventory } from "./egg_inventory.js";
 import { EggShop } from "./egg_shop.js";
+import { FishInfoPanel } from "./fish_info_panel.js";
 import { Shop } from "./shop.js";
 import { SupplyInventory } from "./supply_inventory.js";
 import { SupplyShop } from "./supply_shop.js";
@@ -15,6 +16,7 @@ export class Game {
     #supply_shop;
     #inventory;
     #supply_inventory;
+    #fish_info_panel;
     #tank;
     #encountered_species_ids = new Set();
     #cleanliness_meter;
@@ -42,11 +44,17 @@ export class Game {
         this.#ill_count_element = document.querySelector("#ill-count");
         this.#toast_element = document.querySelector("#toast");
 
+        this.#fish_info_panel = new FishInfoPanel({
+            element: document.querySelector("#fish-info-panel"),
+            on_close: () => this.#tank.clear_selection()
+        });
+
         this.#tank = new Tank({
             element: document.querySelector("#tank"),
             entity_layer: document.querySelector("#tank-entities"),
             on_fish_hatched: (fish_type) => this.#handle_fish_hatched(fish_type),
-            on_status_change: (status) => this.#sync_tank_status(status)
+            on_status_change: (status) => this.#sync_tank_status(status),
+            on_fish_selected: (fish_info) => this.#fish_info_panel.show(fish_info)
         });
 
         this.#inventory = new EggInventory({
