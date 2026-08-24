@@ -1,5 +1,8 @@
 import { EGG_TYPES } from "../data/egg_types.js";
+import { FISH_SPECIES } from "../data/fish_species.js";
 import { EggInventory } from "./egg_inventory.js";
+import { EggShop } from "./egg_shop.js";
+import { FishShop } from "./fish_shop.js";
 import { Shop } from "./shop.js";
 import { Tank } from "./tank.js";
 
@@ -7,6 +10,8 @@ export class Game {
     #money = 80;
     #money_element;
     #shop;
+    #egg_shop;
+    #fish_shop;
     #inventory;
     #tank;
     #toast_element;
@@ -19,7 +24,7 @@ export class Game {
         this.#tank = new Tank({
             element: document.querySelector("#tank"),
             entity_layer: document.querySelector("#tank-entities"),
-            on_fish_hatched: (fish_type) => this.#announce(`${fish_type.name} hatched!`)
+            on_fish_hatched: (fish_type) => this.#announce(`${fish_type.name}_hatched!`)
         });
 
         this.#inventory = new EggInventory({
@@ -31,10 +36,19 @@ export class Game {
 
         this.#shop = new Shop({
             dialog: document.querySelector("#shop-dialog"),
-            list_element: document.querySelector("#shop-list"),
-            open_button: document.querySelector("#shop-button"),
+            open_button: document.querySelector("#shop-button")
+        });
+
+        this.#egg_shop = new EggShop({
+            list_element: document.querySelector("#egg-shop-list"),
             egg_types: EGG_TYPES,
             on_purchase: (egg_type) => this.#purchase_egg(egg_type)
+        });
+
+        this.#fish_shop = new FishShop({
+            list_element: document.querySelector("#fish-shop-list"),
+            fish_species: FISH_SPECIES,
+            on_purchase: (fish_type) => this.#purchase_fish(fish_type)
         });
 
         this.#sync_money();
@@ -42,24 +56,37 @@ export class Game {
 
     #purchase_egg(egg_type) {
         if (this.#money < egg_type.price) {
-            this.#announce("not enough coins for that egg yet.");
+            this.#announce("not_enough_coins_for_that_egg_yet.");
             return;
         }
 
         this.#money -= egg_type.price;
         this.#inventory.add_egg(egg_type);
         this.#sync_money();
-        this.#announce(`${egg_type.name} added to your tray.`);
+        this.#announce(`${egg_type.name}_added_to_your_tray.`);
+    }
+
+    #purchase_fish(fish_type) {
+        if (this.#money < fish_type.price) {
+            this.#announce("not_enough_coins_for_that_fish_yet.");
+            return;
+        }
+
+        this.#money -= fish_type.price;
+        this.#tank.add_fish(fish_type);
+        this.#sync_money();
+        this.#announce(`${fish_type.name}_joined_your_tank.`);
     }
 
     #drop_egg(egg_type, client_x, client_y) {
         this.#tank.drop_egg(egg_type, client_x, client_y);
-        this.#announce(`${egg_type.name} is settling into the tank.`);
+        this.#announce(`${egg_type.name}_is_settling_into_the_tank.`);
     }
 
     #sync_money() {
         this.#money_element.textContent = String(this.#money);
-        this.#shop.set_money(this.#money);
+        this.#egg_shop.set_money(this.#money);
+        this.#fish_shop.set_money(this.#money);
     }
 
     #announce(message) {
