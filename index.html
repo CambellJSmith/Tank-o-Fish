@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tank-o-Fish</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/ui.css">
+</head>
+<body>
+    <main class="game-shell">
+        <header class="top-bar">
+            <div>
+                <p class="eyebrow">tiny aquarium</p>
+                <h1>Tank-o-Fish</h1>
+            </div>
+
+            <div class="top-bar__actions">
+                <div class="money-pill" aria-label="player money">
+                    <span aria-hidden="true">●</span>
+                    <strong id="money-value">0</strong>
+                </div>
+                <button id="shop-button" class="primary-button" type="button">egg shop</button>
+            </div>
+        </header>
+
+        <section class="tank-card" aria-labelledby="tank-heading">
+            <div class="tank-card__heading">
+                <div>
+                    <p class="eyebrow">your tank</p>
+                    <h2 id="tank-heading">home aquarium</h2>
+                </div>
+                <p class="tank-help">buy an egg, then drag it from the tray into the water.</p>
+            </div>
+
+            <div id="tank" class="tank" aria-label="aquarium drop area">
+                <div class="tank-light" aria-hidden="true"></div>
+                <div class="bubble bubble--one" aria-hidden="true"></div>
+                <div class="bubble bubble--two" aria-hidden="true"></div>
+                <div class="bubble bubble--three" aria-hidden="true"></div>
+
+                <div class="plant plant--left" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+                <div class="plant plant--right" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+                <div class="rock rock--left" aria-hidden="true"></div>
+                <div class="rock rock--right" aria-hidden="true"></div>
+
+                <div id="tank-entities" class="tank-entities" aria-live="polite"></div>
+                <div class="sand" aria-hidden="true"></div>
+                <div class="tank-glass" aria-hidden="true"></div>
+            </div>
+        </section>
+
+        <section class="egg-tray-card" aria-labelledby="egg-tray-heading">
+            <div>
+                <p class="eyebrow">egg tray</p>
+                <h2 id="egg-tray-heading">ready to place</h2>
+            </div>
+            <div id="egg-tray" class="egg-tray">
+                <p id="egg-tray-empty" class="empty-message">your purchased eggs will appear here.</p>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="shop-dialog" class="shop-dialog">
+        <form method="dialog" class="shop-dialog__header">
+            <div>
+                <p class="eyebrow">egg shop</p>
+                <h2>choose an egg</h2>
+            </div>
+            <button class="icon-button" type="submit" aria-label="close shop">×</button>
+        </form>
+        <p class="shop-dialog__intro">each egg hatches into a different little fish. buy one and place it yourself.</p>
+        <div id="shop-list" class="shop-list"></div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
