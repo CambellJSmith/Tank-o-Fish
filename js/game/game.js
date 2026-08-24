@@ -160,28 +160,18 @@ export class Game {
     }
 
     #handle_sponge_interaction(interaction) {
-        if (interaction.phase === "move") {
-            const removed_dirt = this.#tank.scrub_at(
-                interaction.client_x,
-                interaction.client_y,
-                interaction.previous_client_x,
-                interaction.previous_client_y
-            );
-
-            if (removed_dirt > 0) {
-                return {
-                    consume: true,
-                    had_effect: true,
-                    effect_count: removed_dirt
-                };
-            }
+        if (interaction.phase !== "drop") {
             return {};
         }
 
-        if (interaction.phase === "drop" && interaction.consumed) {
-            this.#announce(`scrubbing_removed_${Math.round(interaction.effect_count)}_dirt.`);
+        const uses_remaining = this.#tank.drop_sponge(interaction.client_x, interaction.client_y);
+        if (uses_remaining === 0) {
+            this.#announce("drop_the_sponge_into_the_tank_to_store_it_there.");
+            return {};
         }
-        return {};
+
+        this.#announce(`sponge_placed._${uses_remaining}_dirt_patches_remaining.`);
+        return { consume: true, had_effect: true };
     }
 
     #handle_medicine_interaction(interaction) {

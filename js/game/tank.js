@@ -2,6 +2,7 @@ import { roll_fish_for_egg } from "../data/egg_types.js";
 import { Egg } from "../entities/egg.js";
 import { Fish } from "../entities/fish.js";
 import { FoodPellet } from "../entities/food_pellet.js";
+import { TankSponge } from "../entities/tank_sponge.js";
 
 const DIRT_PER_PATCH = 8;
 const SPONGE_RADIUS = 28;
@@ -34,6 +35,7 @@ export class Tank {
     #eggs = new Set();
     #fish = new Set();
     #food = new Set();
+    #sponges = new Set();
     #dirt_patches = new Set();
     #selected_fish = null;
     #dirt_level = 0;
@@ -100,45 +102,25 @@ export class Tank {
         return pellet_count;
     }
 
-    scrub_at(client_x, client_y, previous_client_x, previous_client_y) {
-        if (!this.contains_point(client_x, client_y) || this.#dirt_patches.size === 0) {
+    drop_sponge(client_x, client_y) {
+        if (!this.contains_point(client_x, client_y)) {
             return 0;
         }
 
         const bounds = this.#element.getBoundingClientRect();
-        const end_x = client_x - bounds.left;
-        const end_y = client_y - bounds.top;
-        const previous_is_inside = this.contains_point(previous_client_x, previous_client_y);
-        const start_x = previous_is_inside ? previous_client_x - bounds.left : end_x;
-        const start_y = previous_is_inside ? previous_client_y - bounds.top : end_y;
-        const travel_distance = Math.hypot(end_x - start_x, end_y - start_y);
-        const scrub_power = 0.1 + Math.min(0.22, travel_distance / 120);
-        let removed_dirt = 0;
+        const x = Math.max(24, Math.min(bounds.width - 24, client_x - bounds.left));
+        const y = Math.max(24, Math.min(bounds.height - 24, client_y - bounds.top));
+        const sponge = new TankSponge({
+            parent: this.#element,
+            x,
+            y,
+            on_scrub: (scrub) => this.#scrub_with_sponge(scrub),
+            on_exhausted: (spent_sponge) => this.#remove_sponge(spent_sponge)
+        });
 
-        for (const patch of Array.from(this.#dirt_patches)) {
-            const hit_distance = distance_to_segment(patch.x, patch.y, start_x, start_y, end_x, end_y);
-            if (hit_distance > (patch.size * 0.5) + SPONGE_RADIUS) {
-                continue;
-            }
-
-            const previous_strength = patch.strength;
-            patch.strength = Math.max(0, patch.strength - scrub_power);
-            removed_dirt += (previous_strength - patch.strength) * DIRT_PER_PATCH;
-            patch.element.style.setProperty("--patch-strength", String(patch.strength));
-
-            if (patch.strength <= 0) {
-                patch.element.remove();
-                this.#dirt_patches.delete(patch);
-            }
-        }
-
-        if (removed_dirt > 0) {
-            this.#dirt_level = Math.max(0, this.#dirt_level - removed_dirt);
-            this.#sync_dirt_visuals();
-            this.#emit_status();
-        }
-
-        return removed_dirt;
+        this.#sponges.add(sponge);
+        sponge.mount();
+        return sponge.uses_remaining;
     }
 
     spray_medicine_at(client_x, client_y, previous_client_x, previous_client_y) {
@@ -200,6 +182,54 @@ export class Tank {
         this.#assign_food_targets();
         this.#emit_status();
         return sold_info;
+    }
+
+    #scrub_with_sponge({ start_x, start_y, end_x, end_y, max_patch_completions }) {
+        if (this.#dirt_patches.size === 0 || max_patch_completions <= 0) {
+            return { removed_dirt: 0, cleaned_patches: 0 };
+        }
+
+        const travel_distance = Math.hypot(end_x - start_x, end_y - start_y);
+        const scrub_power = 0.1 + Math.min(0.22, travel_distance / 120);
+        let removed_dirt = 0;
+        let cleaned_patches = 0;
+
+        for (const patch of Array.from(this.#dirt_patches)) {
+            if (cleaned_patches >= max_patch_completions) {
+                break;
+            }
+
+            const hit_distance = distance_to_segment(patch.x, patch.y, start_x, start_y, end_x, end_y);
+            if (hit_distance > (patch.size * 0.5) + SPONGE_RADIUS) {
+                continue;
+            }
+
+            const previous_strength = patch.strength;
+            patch.strength = Math.max(0, patch.strength - scrub_power);
+            removed_dirt += (previous_strength - patch.strength) * DIRT_PER_PATCH;
+            patch.element.style.setProperty("--patch-strength", String(patch.strength));
+
+            if (patch.strength <= 0) {
+                patch.element.remove();
+                this.#dirt_patches.delete(patch);
+                cleaned_patches += 1;
+            }
+        }
+
+        if (removed_dirt > 0) {
+            this.#dirt_level = Math.max(0, this.#dirt_level - removed_dirt);
+            this.#sync_dirt_visuals();
+            this.#emit_status();
+        }
+
+        return { removed_dirt, cleaned_patches };
+    }
+
+    #remove_sponge(sponge) {
+        if (!this.#sponges.delete(sponge)) {
+            return;
+        }
+        sponge.destroy();
     }
 
     #add_fish(fish_type, { start_x, start_y }) {
