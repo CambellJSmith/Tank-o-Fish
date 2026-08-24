@@ -76,16 +76,19 @@ export class Tank {
         let target_fish = null;
 
         for (const fish of this.#fish) {
+            if (!fish.is_ill) {
+                continue;
+            }
+
             if (!target_fish || fish.health < target_fish.health) {
                 target_fish = fish;
             }
         }
 
-        if (!target_fish || target_fish.health >= 95) {
+        if (!target_fish || !target_fish.cure_illness()) {
             return null;
         }
 
-        target_fish.heal(45);
         this.#emit_status();
         return target_fish.fish_type;
     }
@@ -141,12 +144,16 @@ export class Tank {
         let total_hunger = 0;
         let total_health = 0;
         let growing_count = 0;
+        let ill_count = 0;
 
         for (const fish of this.#fish) {
             total_hunger += fish.hunger;
             total_health += fish.health;
             if (fish.is_growing) {
                 growing_count += 1;
+            }
+            if (fish.is_ill) {
+                ill_count += 1;
             }
         }
 
@@ -158,6 +165,7 @@ export class Tank {
         this.#on_status_change({
             fish_count,
             growing_count,
+            ill_count,
             average_hunger,
             average_health,
             cleanliness,
