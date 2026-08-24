@@ -8,6 +8,9 @@ export class Fish {
     #target_x;
     #target_y;
     #speed;
+    #age_ms;
+    #hunger = 10 + (Math.random() * 8);
+    #health = 100;
     #last_time = performance.now();
     #animation_frame = null;
     #target_timer = 0;
@@ -16,6 +19,7 @@ export class Fish {
         this.#fish_type = fish_type;
         this.#parent = parent;
         this.#starts_grown = starts_grown;
+        this.#age_ms = starts_grown ? fish_type.growth_time_ms : 0;
         this.#x = Math.max(0, start_x - 41);
         this.#y = Math.max(0, start_y);
         this.#target_x = this.#x;
@@ -38,6 +42,54 @@ export class Fish {
         }
 
         this.#animation_frame = requestAnimationFrame((time) => this.#update(time));
+    }
+
+    get fish_type() {
+        return this.#fish_type;
+    }
+
+    get hunger() {
+        return this.#hunger;
+    }
+
+    get health() {
+        return this.#health;
+    }
+
+    get is_growing() {
+        return this.#age_ms < this.#fish_type.growth_time_ms;
+    }
+
+    feed(amount) {
+        this.#hunger = Math.max(0, this.#hunger - amount);
+        this.#sync_care_visuals();
+    }
+
+    heal(amount) {
+        this.#health = Math.min(100, this.#health + amount);
+        this.#sync_care_visuals();
+    }
+
+    tick_care(delta_seconds, tank_dirt_level) {
+        this.#age_ms += delta_seconds * 1000;
+
+        const hunger_multiplier = this.is_growing ? this.#fish_type.growth_hunger_multiplier : 1;
+        this.#hunger = Math.min(
+            100,
+            this.#hunger + (this.#fish_type.base_hunger_rate * hunger_multiplier * delta_seconds)
+        );
+
+        const hunger_pressure = Math.max(0, (this.#hunger - 78) / 22);
+        const dirt_pressure = Math.max(0, (tank_dirt_level - 72) / 28);
+        const damage_per_second = (hunger_pressure * 0.8) + (dirt_pressure * 0.65);
+
+        if (damage_per_second > 0) {
+            this.#health = Math.max(10, this.#health - (damage_per_second * delta_seconds));
+        } else if (this.#hunger < 55 && tank_dirt_level < 60) {
+            this.#health = Math.min(100, this.#health + (0.12 * delta_seconds));
+        }
+
+        this.#sync_care_visuals();
     }
 
     #create_element() {
@@ -99,5 +151,12 @@ export class Fish {
 
     #set_position() {
         this.#element.style.transform = `translate3d(${this.#x}px, ${this.#y}px, 0)`;
+    }
+
+    #sync_care_visuals() {
+        const health_opacity = 0.58 + ((this.#health / 100) * 0.42);
+        this.#element.style.opacity = String(health_opacity);
+        this.#element.classList.toggle("is-hungry", this.#hunger >= 72);
+        this.#element.classList.toggle("is-unwell", this.#health < 65);
     }
 }
