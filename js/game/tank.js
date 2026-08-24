@@ -39,18 +39,34 @@ export class Tank {
         egg.mount();
     }
 
-    #hatch_fish(egg) {
-        this.#eggs.delete(egg);
+    add_fish(fish_type, { start_x = null, start_y = null, starts_grown = true } = {}) {
+        const width = this.#entity_layer.clientWidth;
+        const height = this.#entity_layer.clientHeight;
+        const fish_x = start_x ?? (64 + Math.random() * Math.max(1, width - 128));
+        const fish_y = start_y ?? (70 + Math.random() * Math.max(1, height - 230));
 
         const fish = new Fish({
-            fish_type: egg.egg_type.fish,
+            fish_type,
             parent: this.#entity_layer,
-            start_x: egg.x,
-            start_y: Math.max(70, this.#entity_layer.clientHeight - 155)
+            start_x: fish_x,
+            start_y: fish_y,
+            starts_grown
         });
 
         this.#fish.add(fish);
         fish.mount();
+        return fish;
+    }
+
+    #hatch_fish(egg) {
+        this.#eggs.delete(egg);
+
+        this.add_fish(egg.egg_type.fish, {
+            start_x: egg.x,
+            start_y: Math.max(70, this.#entity_layer.clientHeight - 155),
+            starts_grown: false
+        });
+
         this.#on_fish_hatched(egg.egg_type.fish);
     }
 }
