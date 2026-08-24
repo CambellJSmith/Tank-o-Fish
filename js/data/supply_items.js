@@ -18,6 +18,6 @@ export const SUPPLY_ITEMS = Object.freeze([
         name: "fish_medicine",
         price: 14,
         icon: "+",
-        description: "one_dose_treats_the_fish_with_the_lowest_health_in_your_tank."
+        description: "one_dose_cures_one_ill_fish._once_cured_its_health_can_gradually_recover_with_good_care."
     })
 ]);
