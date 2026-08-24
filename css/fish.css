@@ -1,7 +1,24 @@
 .fish {
     width: 82px;
     height: 60px;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
     will-change: transform;
+}
+
+.fish:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.96);
+    outline-offset: 4px;
+}
+
+.fish.is-selected {
+    outline: 2px solid rgba(45, 111, 124, 0.9);
+    outline-offset: 4px;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .fish-growth {
@@ -20,5 +37,6 @@
     object-fit: contain;
     image-rendering: pixelated;
     user-select: none;
+    pointer-events: none;
     filter: drop-shadow(0 5px 3px rgba(31, 83, 95, 0.18));
 }

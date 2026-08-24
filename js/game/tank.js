@@ -7,17 +7,20 @@ export class Tank {
     #entity_layer;
     #on_fish_hatched;
     #on_status_change;
+    #on_fish_selected;
     #eggs = new Set();
     #fish = new Set();
+    #selected_fish = null;
     #dirt_level = 0;
     #care_timer = null;
     #last_care_time = performance.now();
 
-    constructor({ element, entity_layer, on_fish_hatched, on_status_change }) {
+    constructor({ element, entity_layer, on_fish_hatched, on_status_change, on_fish_selected }) {
         this.#element = element;
         this.#entity_layer = entity_layer;
         this.#on_fish_hatched = on_fish_hatched;
         this.#on_status_change = on_status_change;
+        this.#on_fish_selected = on_fish_selected;
         this.#care_timer = window.setInterval(() => this.#update_care(), 500);
         this.#emit_status();
     }
@@ -45,6 +48,16 @@ export class Tank {
 
         this.#eggs.add(egg);
         egg.mount();
+    }
+
+    clear_selection() {
+        if (!this.#selected_fish) {
+            return;
+        }
+
+        this.#selected_fish.set_selected(false);
+        this.#selected_fish = null;
+        this.#on_fish_selected(null);
     }
 
     feed() {
@@ -99,12 +112,25 @@ export class Tank {
             parent: this.#entity_layer,
             start_x,
             start_y,
-            starts_grown: false
+            starts_grown: false,
+            on_select: (selected_fish) => this.#select_fish(selected_fish)
         });
 
         this.#fish.add(fish);
         fish.mount();
         this.#emit_status();
+    }
+
+    #select_fish(fish) {
+        if (this.#selected_fish === fish) {
+            this.#on_fish_selected(fish.get_info());
+            return;
+        }
+
+        this.#selected_fish?.set_selected(false);
+        this.#selected_fish = fish;
+        this.#selected_fish.set_selected(true);
+        this.#on_fish_selected(this.#selected_fish.get_info());
     }
 
     #hatch_fish(egg) {
@@ -171,5 +197,9 @@ export class Tank {
             cleanliness,
             dirt_level: this.#dirt_level
         });
+
+        if (this.#selected_fish) {
+            this.#on_fish_selected(this.#selected_fish.get_info());
+        }
     }
 }

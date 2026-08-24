@@ -3,6 +3,7 @@ export class Fish {
     #parent;
     #element;
     #starts_grown;
+    #on_select;
     #x;
     #y;
     #target_x;
@@ -17,10 +18,11 @@ export class Fish {
     #animation_frame = null;
     #target_timer = 0;
 
-    constructor({ fish_type, parent, start_x, start_y, starts_grown = false }) {
+    constructor({ fish_type, parent, start_x, start_y, starts_grown = false, on_select }) {
         this.#fish_type = fish_type;
         this.#parent = parent;
         this.#starts_grown = starts_grown;
+        this.#on_select = on_select;
         this.#age_ms = starts_grown ? fish_type.growth_time_ms : 0;
         this.#x = Math.max(0, start_x - 41);
         this.#y = Math.max(0, start_y);
@@ -65,6 +67,30 @@ export class Fish {
 
     get is_ill() {
         return this.#is_ill;
+    }
+
+    get_info() {
+        const growth_progress = Math.min(100, (this.#age_ms / this.#fish_type.growth_time_ms) * 100);
+        const hunger_multiplier = this.is_growing ? this.#fish_type.growth_hunger_multiplier : 1;
+        const current_hunger_rate = this.#fish_type.base_hunger_rate * hunger_multiplier;
+
+        return {
+            species_id: this.#fish_type.species_id,
+            name: this.#fish_type.name,
+            sprite: this.#fish_type.sprite,
+            sprite_number: this.#fish_type.sprite_number,
+            hunger: this.#hunger,
+            health: this.#health,
+            is_ill: this.#is_ill,
+            is_growing: this.is_growing,
+            growth_progress,
+            hunger_per_minute: current_hunger_rate * 60
+        };
+    }
+
+    set_selected(is_selected) {
+        this.#element.classList.toggle("is-selected", is_selected);
+        this.#element.setAttribute("aria-pressed", String(is_selected));
     }
 
     feed(amount) {
@@ -123,11 +149,14 @@ export class Fish {
     }
 
     #create_element() {
-        const element = document.createElement("div");
+        const element = document.createElement("button");
+        element.type = "button";
         element.className = "fish";
         element.style.setProperty("--growth-scale", this.#starts_grown ? "1" : "0.55");
         element.style.setProperty("--facing", "1");
-        element.setAttribute("aria-label", this.#starts_grown ? this.#fish_type.name : `baby_${this.#fish_type.name}`);
+        element.setAttribute("aria-label", `inspect_${this.#fish_type.name}`);
+        element.setAttribute("aria-pressed", "false");
+        element.addEventListener("click", () => this.#on_select?.(this));
 
         const growth = document.createElement("div");
         growth.className = "fish-growth";

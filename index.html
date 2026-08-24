@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/fish.css">
     <link rel="stylesheet" href="css/care.css">
+    <link rel="stylesheet" href="css/fish_info.css">
     <link rel="stylesheet" href="css/ui.css">
 </head>
 <body>
@@ -33,7 +34,7 @@
                     <p class="eyebrow">your_tank</p>
                     <h2 id="tank-heading">home_aquarium</h2>
                 </div>
-                <p class="tank-help">dirty_water_and_repeated_underfeeding_can_make_fish_ill._medicine_cures_illness_so_health_can_recover.</p>
+                <p class="tank-help">click_a_fish_to_inspect_it._dirty_water_and_repeated_underfeeding_can_make_fish_ill.</p>
             </div>
 
             <div class="tank-status" aria-label="tank_status">
@@ -76,6 +77,44 @@
                 <div class="tank-dirt" aria-hidden="true"></div>
                 <div class="tank-glass" aria-hidden="true"></div>
             </div>
+
+            <aside id="fish-info-panel" class="fish-info-panel" aria-labelledby="fish-info-name" hidden>
+                <div class="fish-info-preview">
+                    <img id="fish-info-sprite" src="" alt="">
+                </div>
+
+                <div class="fish-info-main">
+                    <div class="fish-info-header">
+                        <div>
+                            <p class="eyebrow">selected_fish</p>
+                            <h3 id="fish-info-name">fish</h3>
+                            <span id="fish-info-sprite-number" class="fish-info-sprite-number"></span>
+                        </div>
+                        <button id="fish-info-close" class="fish-info-close" type="button" aria-label="close_fish_info">×</button>
+                    </div>
+
+                    <div class="fish-info-summary">
+                        <span>stage_<strong id="fish-info-stage">growing</strong></span>
+                        <span>condition_<strong id="fish-info-condition">healthy</strong></span>
+                        <span>appetite_<strong id="fish-info-appetite">0_hunger_per_minute</strong></span>
+                    </div>
+
+                    <div class="fish-info-meters">
+                        <article class="fish-info-meter">
+                            <div><span>growth</span><strong id="fish-info-growth-value">0%</strong></div>
+                            <progress id="fish-info-growth-meter" max="100" value="0">0%</progress>
+                        </article>
+                        <article class="fish-info-meter fish-info-meter--hunger">
+                            <div><span>hunger</span><strong id="fish-info-hunger-value">0%</strong></div>
+                            <progress id="fish-info-hunger-meter" max="100" value="0">0%</progress>
+                        </article>
+                        <article class="fish-info-meter fish-info-meter--health">
+                            <div><span>health</span><strong id="fish-info-health-value">100%</strong></div>
+                            <progress id="fish-info-health-meter" max="100" value="100">100%</progress>
+                        </article>
+                    </div>
+                </div>
+            </aside>
         </section>
 
         <section class="egg-tray-card" aria-labelledby="egg-tray-heading">
