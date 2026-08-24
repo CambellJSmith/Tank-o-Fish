@@ -83,12 +83,13 @@ export class SupplyInventory {
         const count = this.get_count(item_id);
         const count_element = this.#count_elements.get(item_id);
         const tool = this.#tool_elements.get(item_id);
+        const is_active_tool = this.#active_drag?.item_id === item_id;
 
         if (count_element) {
             count_element.textContent = `owned_${count}`;
         }
         if (tool) {
-            tool.disabled = count <= 0;
+            tool.disabled = count <= 0 && !is_active_tool;
         }
     }
 
@@ -161,20 +162,23 @@ export class SupplyInventory {
         }
 
         event.preventDefault();
+        const completed_item_id = drag.item_id;
 
-        const result = this.#on_interaction?.({
-            phase: "drop",
-            item_id: drag.item_id,
-            client_x: event.clientX,
-            client_y: event.clientY,
-            previous_client_x: drag.previous_client_x,
-            previous_client_y: drag.previous_client_y,
-            consumed: drag.consumed,
-            had_effect: drag.had_effect,
-            effect_count: drag.effect_count
-        }) ?? {};
+        if (event.type !== "pointercancel") {
+            const result = this.#on_interaction?.({
+                phase: "drop",
+                item_id: drag.item_id,
+                client_x: event.clientX,
+                client_y: event.clientY,
+                previous_client_x: drag.previous_client_x,
+                previous_client_y: drag.previous_client_y,
+                consumed: drag.consumed,
+                had_effect: drag.had_effect,
+                effect_count: drag.effect_count
+            }) ?? {};
 
-        this.#apply_interaction_result(result);
+            this.#apply_interaction_result(result);
+        }
 
         if (drag.source.hasPointerCapture(event.pointerId)) {
             drag.source.releasePointerCapture(event.pointerId);
@@ -183,6 +187,7 @@ export class SupplyInventory {
         drag.ghost.remove();
         document.body.classList.remove("is-dragging-supply");
         this.#active_drag = null;
+        this.#sync_item(completed_item_id);
     }
 
     #apply_interaction_result(result) {
