@@ -104,6 +104,67 @@
     transition: opacity 80ms linear;
 }
 
+.tank-sponge {
+    position: absolute;
+    z-index: 24;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 3px;
+    width: 58px;
+    height: 46px;
+    padding: 5px 6px 5px 8px;
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    border-radius: 14px;
+    color: #806e18;
+    background:
+        radial-gradient(circle at 28% 32%, rgba(255, 255, 255, 0.68) 0 2px, transparent 3px),
+        radial-gradient(circle at 68% 62%, rgba(181, 153, 37, 0.22) 0 2px, transparent 3px),
+        linear-gradient(145deg, #fff7a9, #e8d45c);
+    box-shadow: 0 7px 14px rgba(59, 84, 88, 0.2), inset 4px 4px 0 rgba(255, 255, 255, 0.22);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    transform: translate(-50%, -50%);
+    transition: opacity 240ms ease, transform 120ms ease;
+}
+
+.tank-sponge:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.96);
+    outline-offset: 3px;
+}
+
+.tank-sponge.is-scrubbing {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) rotate(-4deg) scale(1.05);
+}
+
+.tank-sponge.is-spent {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.72);
+}
+
+.tank-sponge__icon {
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.tank-sponge__uses {
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    border-radius: 999px;
+    color: #6f5c11;
+    background: rgba(255, 255, 255, 0.72);
+    font-size: 0.7rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
 .food-pellet {
     position: absolute;
     z-index: 10;
