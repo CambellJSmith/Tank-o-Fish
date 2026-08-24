@@ -2,6 +2,7 @@ export class Fish {
     #fish_type;
     #parent;
     #element;
+    #starts_grown;
     #x;
     #y;
     #target_x;
@@ -11,11 +12,12 @@ export class Fish {
     #animation_frame = null;
     #target_timer = 0;
 
-    constructor({ fish_type, parent, start_x, start_y }) {
+    constructor({ fish_type, parent, start_x, start_y, starts_grown = false }) {
         this.#fish_type = fish_type;
         this.#parent = parent;
-        this.#x = start_x - 35;
-        this.#y = start_y;
+        this.#starts_grown = starts_grown;
+        this.#x = Math.max(0, start_x - 41);
+        this.#y = Math.max(0, start_y);
         this.#target_x = this.#x;
         this.#target_y = this.#y;
         this.#speed = 24 + Math.random() * 12;
@@ -27,11 +29,13 @@ export class Fish {
         this.#set_position();
         this.#choose_target();
 
-        requestAnimationFrame(() => {
-            const growth = this.#element.querySelector(".fish-growth");
-            growth.style.transitionDuration = `${this.#fish_type.growth_time_ms}ms`;
-            this.#element.style.setProperty("--growth-scale", "1");
-        });
+        if (!this.#starts_grown) {
+            requestAnimationFrame(() => {
+                const growth = this.#element.querySelector(".fish-growth");
+                growth.style.transitionDuration = `${this.#fish_type.growth_time_ms}ms`;
+                this.#element.style.setProperty("--growth-scale", "1");
+            });
+        }
 
         this.#animation_frame = requestAnimationFrame((time) => this.#update(time));
     }
@@ -39,21 +43,25 @@ export class Fish {
     #create_element() {
         const element = document.createElement("div");
         element.className = "fish";
-        element.style.setProperty("--fish-hue", String(this.#fish_type.hue));
-        element.style.setProperty("--fish-accent-hue", String(this.#fish_type.accent_hue));
-        element.style.setProperty("--growth-scale", "0.55");
+        element.style.setProperty("--growth-scale", this.#starts_grown ? "1" : "0.55");
         element.style.setProperty("--facing", "1");
-        element.setAttribute("aria-label", `baby ${this.#fish_type.name}`);
-        element.innerHTML = `
-            <div class="fish-growth">
-                <div class="fish-facing">
-                    <div class="fish-tail"></div>
-                    <div class="fish-body"></div>
-                    <div class="fish-fin"></div>
-                    <div class="fish-eye"></div>
-                </div>
-            </div>
-        `;
+        element.setAttribute("aria-label", this.#starts_grown ? this.#fish_type.name : `baby_${this.#fish_type.name}`);
+
+        const growth = document.createElement("div");
+        growth.className = "fish-growth";
+
+        const facing = document.createElement("div");
+        facing.className = "fish-facing";
+
+        const image = document.createElement("img");
+        image.className = "fish-sprite";
+        image.src = this.#fish_type.sprite;
+        image.alt = "";
+        image.draggable = false;
+
+        facing.append(image);
+        growth.append(facing);
+        element.append(growth);
         return element;
     }
 
@@ -82,15 +90,14 @@ export class Fish {
     }
 
     #choose_target() {
-        const max_x = Math.max(24, this.#parent.clientWidth - 84);
-        const max_y = Math.max(90, this.#parent.clientHeight - 150);
-        this.#target_x = 22 + Math.random() * Math.max(1, max_x - 22);
+        const max_x = Math.max(24, this.#parent.clientWidth - 94);
+        const max_y = Math.max(90, this.#parent.clientHeight - 160);
+        this.#target_x = 24 + Math.random() * Math.max(1, max_x - 24);
         this.#target_y = 44 + Math.random() * Math.max(1, max_y - 44);
         this.#target_timer = 2.4 + Math.random() * 3.6;
     }
 
     #set_position() {
-        this.#element.style.left = `${this.#x}px`;
-        this.#element.style.top = `${this.#y}px`;
+        this.#element.style.transform = `translate3d(${this.#x}px, ${this.#y}px, 0)`;
     }
 }

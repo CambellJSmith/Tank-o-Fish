@@ -6,35 +6,36 @@
     <title>Tank-o-Fish</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/fish.css">
     <link rel="stylesheet" href="css/ui.css">
 </head>
 <body>
     <main class="game-shell">
         <header class="top-bar">
             <div>
-                <p class="eyebrow">tiny aquarium</p>
+                <p class="eyebrow">tiny_aquarium</p>
                 <h1>Tank-o-Fish</h1>
             </div>
 
             <div class="top-bar__actions">
-                <div class="money-pill" aria-label="player money">
+                <div class="money-pill" aria-label="player_money">
                     <span aria-hidden="true">●</span>
                     <strong id="money-value">0</strong>
                 </div>
-                <button id="shop-button" class="primary-button" type="button">egg shop</button>
+                <button id="shop-button" class="primary-button" type="button">shop</button>
             </div>
         </header>
 
         <section class="tank-card" aria-labelledby="tank-heading">
             <div class="tank-card__heading">
                 <div>
-                    <p class="eyebrow">your tank</p>
-                    <h2 id="tank-heading">home aquarium</h2>
+                    <p class="eyebrow">your_tank</p>
+                    <h2 id="tank-heading">home_aquarium</h2>
                 </div>
-                <p class="tank-help">buy an egg, then drag it from the tray into the water.</p>
+                <p class="tank-help">buy_fish_directly_or_buy_an_egg_and_drag_it_into_the_water.</p>
             </div>
 
-            <div id="tank" class="tank" aria-label="aquarium drop area">
+            <div id="tank" class="tank" aria-label="aquarium_drop_area">
                 <div class="tank-light" aria-hidden="true"></div>
                 <div class="bubble bubble--one" aria-hidden="true"></div>
                 <div class="bubble bubble--two" aria-hidden="true"></div>
@@ -57,11 +58,11 @@
 
         <section class="egg-tray-card" aria-labelledby="egg-tray-heading">
             <div>
-                <p class="eyebrow">egg tray</p>
-                <h2 id="egg-tray-heading">ready to place</h2>
+                <p class="eyebrow">egg_tray</p>
+                <h2 id="egg-tray-heading">ready_to_place</h2>
             </div>
             <div id="egg-tray" class="egg-tray">
-                <p id="egg-tray-empty" class="empty-message">your purchased eggs will appear here.</p>
+                <p id="egg-tray-empty" class="empty-message">your_purchased_eggs_will_appear_here.</p>
             </div>
         </section>
     </main>
@@ -69,13 +70,26 @@
     <dialog id="shop-dialog" class="shop-dialog">
         <form method="dialog" class="shop-dialog__header">
             <div>
-                <p class="eyebrow">egg shop</p>
-                <h2>choose an egg</h2>
+                <p class="eyebrow">aquarium_shop</p>
+                <h2>choose_something</h2>
             </div>
-            <button class="icon-button" type="submit" aria-label="close shop">×</button>
+            <button class="icon-button" type="submit" aria-label="close_shop">×</button>
         </form>
-        <p class="shop-dialog__intro">each egg hatches into a different little fish. buy one and place it yourself.</p>
-        <div id="shop-list" class="shop-list"></div>
+
+        <div class="shop-tabs" role="tablist" aria-label="shop_categories">
+            <button id="shop-tab-eggs" class="shop-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="shop-panel-eggs" data-shop-tab="eggs">eggs</button>
+            <button id="shop-tab-fish" class="shop-tab" type="button" role="tab" aria-selected="false" aria-controls="shop-panel-fish" data-shop-tab="fish">fish</button>
+        </div>
+
+        <section id="shop-panel-eggs" class="shop-panel" role="tabpanel" aria-labelledby="shop-tab-eggs" data-shop-panel="eggs">
+            <p class="shop-dialog__intro">buy_an_egg_then_drag_it_from_your_tray_into_the_tank_to_hatch_it.</p>
+            <div id="egg-shop-list" class="shop-list shop-list--eggs"></div>
+        </section>
+
+        <section id="shop-panel-fish" class="shop-panel" role="tabpanel" aria-labelledby="shop-tab-fish" data-shop-panel="fish" hidden>
+            <p class="shop-dialog__intro">every_sprite_is_its_own_species._buy_one_to_add_that_exact_fish_to_your_tank.</p>
+            <div id="fish-shop-list" class="shop-list shop-list--fish"></div>
+        </section>
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
