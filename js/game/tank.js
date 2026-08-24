@@ -114,12 +114,9 @@ export class Tank {
         const bounds = this.#element.getBoundingClientRect();
         const end_x = client_x - bounds.left;
         const end_y = client_y - bounds.top;
-        const start_x = this.contains_point(previous_client_x, previous_client_y)
-            ? previous_client_x - bounds.left
-            : end_x;
-        const start_y = this.contains_point(previous_client_x, previous_client_y)
-            ? previous_client_y - bounds.top
-            : end_y;
+        const previous_is_inside = this.contains_point(previous_client_x, previous_client_y);
+        const start_x = previous_is_inside ? previous_client_x - bounds.left : end_x;
+        const start_y = previous_is_inside ? previous_client_y - bounds.top : end_y;
         const travel_distance = Math.hypot(end_x - start_x, end_y - start_y);
         const scrub_power = 0.1 + Math.min(0.22, travel_distance / 120);
         let removed_dirt = 0;
@@ -150,24 +147,33 @@ export class Tank {
         return removed_dirt;
     }
 
-    spray_medicine_at(client_x, client_y) {
+    spray_medicine_at(client_x, client_y, previous_client_x, previous_client_y) {
         if (!this.contains_point(client_x, client_y)) {
             return { sprayed: false, cured_count: 0 };
         }
 
         const bounds = this.#element.getBoundingClientRect();
-        const local_x = client_x - bounds.left;
-        const local_y = client_y - bounds.top;
+        const end_x = client_x - bounds.left;
+        const end_y = client_y - bounds.top;
+        const previous_is_inside = this.contains_point(previous_client_x, previous_client_y);
+        const start_x = previous_is_inside ? previous_client_x - bounds.left : end_x;
+        const start_y = previous_is_inside ? previous_client_y - bounds.top : end_y;
         const now = performance.now();
 
         if (now - this.#last_spray_visual_time >= 45) {
             this.#last_spray_visual_time = now;
-            this.#create_medicine_spray(local_x, local_y);
+            this.#create_medicine_spray(end_x, end_y);
         }
 
         let cured_count = 0;
         for (const fish of this.#fish) {
-            if (fish.is_ill && fish.is_hit_by(local_x, local_y, MEDICINE_RADIUS) && fish.cure_illness()) {
+            if (!fish.is_ill) {
+                continue;
+            }
+
+            const center = fish.center;
+            const hit_distance = distance_to_segment(center.x, center.y, start_x, start_y, end_x, end_y);
+            if (hit_distance <= MEDICINE_RADIUS && fish.cure_illness()) {
                 cured_count += 1;
             }
         }
@@ -297,11 +303,14 @@ export class Tank {
     }
 
     #create_dirt_patch() {
-        const width = Math.max(320, this.#element.clientWidth);
-        const height = Math.max(300, this.#element.clientHeight);
-        const size = 40 + (Math.random() * 34);
-        const x = 36 + (Math.random() * Math.max(1, width - 72));
-        const y = 48 + (Math.random() * Math.max(1, height - 150));
+        const width = Math.max(1, this.#element.clientWidth);
+        const height = Math.max(1, this.#element.clientHeight);
+        const horizontal_margin = Math.min(36, width * 0.14);
+        const top_margin = Math.min(48, height * 0.14);
+        const bottom_margin = Math.min(102, height * 0.22);
+        const size = Math.min(74, Math.max(38, width * (0.12 + (Math.random() * 0.08))));
+        const x = horizontal_margin + (Math.random() * Math.max(1, width - (horizontal_margin * 2)));
+        const y = top_margin + (Math.random() * Math.max(1, height - top_margin - bottom_margin));
         const element = document.createElement("span");
         const patch = { element, x, y, size, strength: 1 };
 
