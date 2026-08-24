@@ -67,7 +67,7 @@ export class Game {
         this.#supply_inventory = new SupplyInventory({
             container: document.querySelector("#supply-inventory"),
             items: SUPPLY_ITEMS,
-            on_use: (item_id) => this.#use_supply(item_id)
+            on_interaction: (interaction) => this.#handle_supply_interaction(interaction)
         });
 
         this.#shop = new Shop({
@@ -119,38 +119,81 @@ export class Game {
         this.#announce(`${egg_type.name}_is_settling_into_the_tank.`);
     }
 
-    #use_supply(item_id) {
-        if (item_id === "food") {
-            const fed_count = this.#tank.feed();
-            if (fed_count === 0) {
-                this.#announce("there_are_no_fish_to_feed_yet.");
-                return false;
-            }
-            this.#announce(`fed_${fed_count}_fish.`);
-            return true;
+    #handle_supply_interaction(interaction) {
+        if (interaction.item_id === "food") {
+            return this.#handle_food_interaction(interaction);
+        }
+        if (interaction.item_id === "sponge") {
+            return this.#handle_sponge_interaction(interaction);
+        }
+        if (interaction.item_id === "medicine") {
+            return this.#handle_medicine_interaction(interaction);
+        }
+        return {};
+    }
+
+    #handle_food_interaction(interaction) {
+        if (interaction.phase !== "drop") {
+            return {};
         }
 
-        if (item_id === "sponge") {
-            const removed_dirt = this.#tank.clean();
-            if (removed_dirt === 0) {
-                this.#announce("the_tank_is_already_clean.");
-                return false;
-            }
-            this.#announce("the_tank_is_sparkling_clean_again.");
-            return true;
+        const pellet_count = this.#tank.drop_food(interaction.client_x, interaction.client_y);
+        if (pellet_count === 0) {
+            this.#announce("drop_the_food_into_a_tank_with_fish_in_it.");
+            return {};
         }
 
-        if (item_id === "medicine") {
-            const treated_fish = this.#tank.medicate();
-            if (!treated_fish) {
-                this.#announce("none_of_your_fish_are_ill_right_now.");
-                return false;
+        this.#announce(`food_dropped._${pellet_count}_pellets_scattered.`);
+        return { consume: true, had_effect: true };
+    }
+
+    #handle_sponge_interaction(interaction) {
+        if (interaction.phase === "move") {
+            const removed_dirt = this.#tank.scrub_at(
+                interaction.client_x,
+                interaction.client_y,
+                interaction.previous_client_x,
+                interaction.previous_client_y
+            );
+
+            if (removed_dirt > 0) {
+                return {
+                    consume: true,
+                    had_effect: true,
+                    effect_count: removed_dirt
+                };
             }
-            this.#announce(`${treated_fish.name}_was_cured._health_can_now_recover.`);
-            return true;
+            return {};
         }
 
-        return false;
+        if (interaction.phase === "drop" && interaction.consumed) {
+            this.#announce(`scrubbing_removed_${Math.round(interaction.effect_count)}_dirt.`);
+        }
+        return {};
+    }
+
+    #handle_medicine_interaction(interaction) {
+        if (interaction.phase === "move") {
+            const result = this.#tank.spray_medicine_at(interaction.client_x, interaction.client_y);
+            if (!result.sprayed) {
+                return {};
+            }
+
+            return {
+                consume: true,
+                had_effect: result.cured_count > 0,
+                effect_count: result.cured_count
+            };
+        }
+
+        if (interaction.phase === "drop" && interaction.consumed) {
+            if (interaction.effect_count > 0) {
+                this.#announce(`medicine_spray_cured_${interaction.effect_count}_fish.`);
+            } else {
+                this.#announce("medicine_was_sprayed_but_no_ill_fish_were_hit.");
+            }
+        }
+        return {};
     }
 
     #handle_fish_hatched(fish_type) {
