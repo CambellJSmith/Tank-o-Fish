@@ -1,0 +1,419 @@
+.game-shell {
+    width: min(1120px, calc(100% - 28px));
+    margin: 0 auto;
+    padding: 28px 0 48px;
+}
+
+.top-bar,
+.tank-card__heading,
+.egg-tray-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.top-bar {
+    margin-bottom: 22px;
+}
+
+.top-bar__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tank-card,
+.egg-tray-card {
+    border: 1px solid var(--panel-border);
+    border-radius: 28px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+}
+
+.tank-card {
+    padding: 18px;
+}
+
+.tank-card__heading {
+    padding: 5px 5px 16px;
+}
+
+.tank-help {
+    max-width: 360px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    text-align: right;
+}
+
+.tank {
+    position: relative;
+    min-height: 520px;
+    overflow: hidden;
+    border: 7px solid rgba(126, 181, 196, 0.28);
+    border-radius: 24px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 16%),
+        linear-gradient(180deg, #b9edf1 0%, #80d5dc 44%, #5ebec7 100%);
+    box-shadow:
+        inset 0 0 38px rgba(255, 255, 255, 0.55),
+        inset 0 -28px 44px rgba(33, 128, 141, 0.16);
+    touch-action: none;
+}
+
+.tank-light {
+    position: absolute;
+    inset: -20% auto auto 17%;
+    width: 24%;
+    height: 120%;
+    transform: rotate(11deg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0));
+    filter: blur(10px);
+    pointer-events: none;
+}
+
+.tank-glass {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    border-radius: 17px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+    pointer-events: none;
+}
+
+.tank-entities {
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+}
+
+.sand {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    height: 62px;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4) 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 50%, rgba(166, 115, 65, 0.16) 0 2px, transparent 3px),
+        linear-gradient(180deg, #e8ca90 0%, #d8b578 100%);
+    box-shadow: inset 0 8px 15px rgba(255, 255, 255, 0.18);
+}
+
+.rock {
+    position: absolute;
+    bottom: 48px;
+    z-index: 6;
+    width: 62px;
+    height: 42px;
+    border-radius: 55% 45% 38% 48%;
+    background: linear-gradient(150deg, #8ea6a2, #607a79);
+    box-shadow: inset 10px 7px 0 rgba(255, 255, 255, 0.13);
+}
+
+.rock--left {
+    left: 8%;
+    transform: rotate(-7deg);
+}
+
+.rock--right {
+    right: 15%;
+    width: 82px;
+    height: 50px;
+    transform: rotate(6deg);
+}
+
+.plant {
+    position: absolute;
+    bottom: 48px;
+    z-index: 6;
+    width: 74px;
+    height: 120px;
+    pointer-events: none;
+}
+
+.plant span {
+    position: absolute;
+    bottom: 0;
+    width: 18px;
+    height: 108px;
+    border-radius: 80% 20% 80% 20%;
+    background: linear-gradient(180deg, #6ac78d, #2b9467);
+    transform-origin: bottom center;
+}
+
+.plant span:nth-child(1) {
+    left: 16px;
+    height: 92px;
+    transform: rotate(-17deg);
+}
+
+.plant span:nth-child(2) {
+    left: 31px;
+    transform: rotate(4deg);
+}
+
+.plant span:nth-child(3) {
+    left: 46px;
+    height: 82px;
+    transform: rotate(19deg);
+}
+
+.plant--left {
+    left: 15%;
+}
+
+.plant--right {
+    right: 5%;
+    transform: scale(0.82);
+}
+
+.bubble {
+    position: absolute;
+    z-index: 3;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.58);
+    border-radius: 50%;
+    animation: bubble-rise 6s linear infinite;
+}
+
+.bubble--one {
+    left: 13%;
+    bottom: 92px;
+}
+
+.bubble--two {
+    left: 48%;
+    bottom: 54px;
+    width: 9px;
+    height: 9px;
+    animation-delay: -2.7s;
+}
+
+.bubble--three {
+    right: 21%;
+    bottom: 72px;
+    width: 18px;
+    height: 18px;
+    animation-delay: -4.4s;
+}
+
+.egg-tray-card {
+    margin-top: 16px;
+    padding: 18px 20px;
+}
+
+.egg-tray {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 62px;
+    gap: 10px;
+}
+
+.empty-message {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.inventory-egg,
+.dragging-egg {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 62px;
+    border: 0;
+    border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+    background:
+        radial-gradient(circle at 34% 32%, var(--egg-spot) 0 5px, transparent 6px),
+        radial-gradient(circle at 66% 57%, var(--egg-spot) 0 4px, transparent 5px),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.86), var(--egg-color));
+    box-shadow:
+        inset 8px 8px 0 rgba(255, 255, 255, 0.26),
+        0 8px 16px rgba(46, 91, 103, 0.18);
+}
+
+.inventory-egg {
+    cursor: grab;
+    touch-action: none;
+}
+
+.inventory-egg:active {
+    cursor: grabbing;
+}
+
+.inventory-egg.is-dragging {
+    opacity: 0.28;
+}
+
+.dragging-egg {
+    position: fixed;
+    z-index: 1000;
+    margin: -31px 0 0 -27px;
+    pointer-events: none;
+    transform: scale(1.06) rotate(3deg);
+}
+
+.tank-egg {
+    position: absolute;
+    z-index: 9;
+    width: 40px;
+    height: 46px;
+    margin-left: -20px;
+    border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+    background:
+        radial-gradient(circle at 34% 32%, var(--egg-spot) 0 4px, transparent 5px),
+        radial-gradient(circle at 66% 57%, var(--egg-spot) 0 3px, transparent 4px),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.86), var(--egg-color));
+    box-shadow:
+        inset 6px 6px 0 rgba(255, 255, 255, 0.24),
+        0 8px 12px rgba(43, 88, 99, 0.16);
+    transition: top 650ms cubic-bezier(0.22, 0.78, 0.22, 1.08);
+}
+
+.tank-egg.is-settled {
+    transform: rotate(-4deg);
+}
+
+.tank-egg.is-hatching {
+    animation: egg-wiggle 0.38s ease-in-out infinite alternate;
+}
+
+.tank-egg.is-hatched {
+    animation: egg-pop 0.35s ease forwards;
+}
+
+.fish {
+    position: absolute;
+    z-index: 8;
+    width: 70px;
+    height: 46px;
+    pointer-events: none;
+}
+
+.fish-growth {
+    width: 100%;
+    height: 100%;
+    transform: scale(var(--growth-scale));
+    transform-origin: center;
+    transition-property: transform;
+    transition-timing-function: linear;
+}
+
+.fish-facing {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(var(--facing));
+}
+
+.fish-tail {
+    position: absolute;
+    top: 10px;
+    left: 2px;
+    width: 25px;
+    height: 30px;
+    clip-path: polygon(100% 50%, 0 0, 20% 50%, 0 100%);
+    background: hsl(var(--fish-accent-hue) 72% 58%);
+}
+
+.fish-body {
+    position: absolute;
+    top: 7px;
+    left: 20px;
+    width: 47px;
+    height: 34px;
+    border-radius: 58% 46% 48% 58%;
+    background:
+        radial-gradient(circle at 72% 34%, rgba(255, 255, 255, 0.7) 0 3px, transparent 4px),
+        linear-gradient(160deg, hsl(var(--fish-hue) 82% 73%), hsl(var(--fish-hue) 74% 55%));
+    box-shadow: inset 6px 7px 0 rgba(255, 255, 255, 0.18);
+}
+
+.fish-fin {
+    position: absolute;
+    right: 17px;
+    bottom: 0;
+    width: 18px;
+    height: 15px;
+    border-radius: 70% 20% 70% 20%;
+    background: hsl(var(--fish-accent-hue) 72% 58%);
+    transform: rotate(-16deg);
+}
+
+.fish-eye {
+    position: absolute;
+    top: 16px;
+    right: 7px;
+    width: 7px;
+    height: 7px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: #263547;
+}
+
+@keyframes bubble-rise {
+    from {
+        transform: translateY(0) scale(0.8);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-430px) scale(1.18);
+        opacity: 0;
+    }
+}
+
+@keyframes egg-wiggle {
+    from { transform: rotate(-8deg) translateY(0); }
+    to { transform: rotate(8deg) translateY(-2px); }
+}
+
+@keyframes egg-pop {
+    to {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+}
+
+@media (max-width: 720px) {
+    .game-shell {
+        width: min(100% - 18px, 1120px);
+        padding-top: 18px;
+    }
+
+    .top-bar,
+    .tank-card__heading,
+    .egg-tray-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .top-bar__actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .tank-help {
+        text-align: left;
+    }
+
+    .tank {
+        min-height: 460px;
+    }
+
+    .egg-tray {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
