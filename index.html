@@ -22,7 +22,7 @@
                     <span aria-hidden="true">●</span>
                     <strong id="money-value">0</strong>
                 </div>
-                <button id="shop-button" class="primary-button" type="button">egg_shop</button>
+                <button id="shop-button" class="primary-button" type="button">shop</button>
             </div>
         </header>
 
@@ -32,7 +32,26 @@
                     <p class="eyebrow">your_tank</p>
                     <h2 id="tank-heading">home_aquarium</h2>
                 </div>
-                <p class="tank-help">buy_one_of_five_mystery_eggs_then_drag_it_into_the_water_to_see_what_hatches.</p>
+                <p class="tank-help">growing_fish_get_hungry_faster_and_more_fish_make_the_tank_dirty_faster.</p>
+            </div>
+
+            <div class="tank-status" aria-label="tank_status">
+                <article class="status-meter status-meter--clean">
+                    <div><span>cleanliness</span><strong id="cleanliness-value">100%</strong></div>
+                    <progress id="cleanliness-meter" max="100" value="100">100%</progress>
+                </article>
+                <article class="status-meter status-meter--hunger">
+                    <div><span>average_hunger</span><strong id="hunger-value">0%</strong></div>
+                    <progress id="hunger-meter" max="100" value="0">0%</progress>
+                </article>
+                <article class="status-meter status-meter--health">
+                    <div><span>average_health</span><strong id="health-value">100%</strong></div>
+                    <progress id="health-meter" max="100" value="100">100%</progress>
+                </article>
+                <div class="tank-counts">
+                    <span>fish_<strong id="fish-count">0</strong></span>
+                    <span>growing_<strong id="growing-count">0</strong></span>
+                </div>
             </div>
 
             <div id="tank" class="tank" aria-label="aquarium_drop_area">
@@ -52,6 +71,7 @@
 
                 <div id="tank-entities" class="tank-entities" aria-live="polite"></div>
                 <div class="sand" aria-hidden="true"></div>
+                <div class="tank-dirt" aria-hidden="true"></div>
                 <div class="tank-glass" aria-hidden="true"></div>
             </div>
         </section>
@@ -65,19 +85,42 @@
                 <p id="egg-tray-empty" class="empty-message">your_purchased_eggs_will_appear_here.</p>
             </div>
         </section>
+
+        <section class="supply-card" aria-labelledby="supply-heading">
+            <div>
+                <p class="eyebrow">care_supplies</p>
+                <h2 id="supply-heading">tank_cupboard</h2>
+            </div>
+            <div id="supply-inventory" class="supply-inventory"></div>
+        </section>
     </main>
 
     <dialog id="shop-dialog" class="shop-dialog">
         <form method="dialog" class="shop-dialog__header">
             <div>
-                <p class="eyebrow">egg_shop</p>
-                <h2>choose_an_egg</h2>
+                <p class="eyebrow">aquarium_shop</p>
+                <h2>stock_up</h2>
             </div>
             <button class="icon-button" type="submit" aria-label="close_shop">×</button>
         </form>
 
-        <p class="shop-dialog__intro">each_egg_type_has_its_own_hidden_species_pool._the_fish_is_only_rolled_when_the_egg_hatches.</p>
-        <div id="egg-shop-list" class="shop-list shop-list--eggs"></div>
+        <p class="shop-dialog__intro">buy_mystery_eggs_to_discover_fish_and_supplies_to_keep_the_tank_healthy.</p>
+
+        <section class="shop-section" aria-labelledby="egg-shop-heading">
+            <div class="shop-section__heading">
+                <h3 id="egg-shop-heading">mystery_eggs</h3>
+                <span>5_types</span>
+            </div>
+            <div id="egg-shop-list" class="shop-list shop-list--eggs"></div>
+        </section>
+
+        <section class="shop-section" aria-labelledby="supply-shop-heading">
+            <div class="shop-section__heading">
+                <h3 id="supply-shop-heading">care_supplies</h3>
+                <span>food · cleaning · treatment</span>
+            </div>
+            <div id="supply-shop-list" class="shop-list shop-list--supplies"></div>
+        </section>
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
