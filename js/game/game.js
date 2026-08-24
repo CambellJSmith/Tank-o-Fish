@@ -25,6 +25,7 @@ export class Game {
     #health_value;
     #fish_count_element;
     #growing_count_element;
+    #ill_count_element;
     #toast_element;
     #toast_timer = null;
 
@@ -38,6 +39,7 @@ export class Game {
         this.#health_value = document.querySelector("#health-value");
         this.#fish_count_element = document.querySelector("#fish-count");
         this.#growing_count_element = document.querySelector("#growing-count");
+        this.#ill_count_element = document.querySelector("#ill-count");
         this.#toast_element = document.querySelector("#toast");
 
         this.#tank = new Tank({
@@ -133,10 +135,10 @@ export class Game {
         if (item_id === "medicine") {
             const treated_fish = this.#tank.medicate();
             if (!treated_fish) {
-                this.#announce("none_of_your_fish_need_medicine_right_now.");
+                this.#announce("none_of_your_fish_are_ill_right_now.");
                 return false;
             }
-            this.#announce(`${treated_fish.name}_was_treated.`);
+            this.#announce(`${treated_fish.name}_was_cured._health_can_now_recover.`);
             return true;
         }
 
@@ -174,6 +176,7 @@ export class Game {
         this.#health_value.textContent = `${health}%`;
         this.#fish_count_element.textContent = String(status.fish_count);
         this.#growing_count_element.textContent = String(status.growing_count);
+        this.#ill_count_element.textContent = String(status.ill_count);
     }
 
     #announce(message) {

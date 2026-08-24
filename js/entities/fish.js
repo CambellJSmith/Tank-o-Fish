@@ -11,6 +11,8 @@ export class Fish {
     #age_ms;
     #hunger = 10 + (Math.random() * 8);
     #health = 100;
+    #illness_risk = 0;
+    #is_ill = false;
     #last_time = performance.now();
     #animation_frame = null;
     #target_timer = 0;
@@ -41,6 +43,7 @@ export class Fish {
             });
         }
 
+        this.#sync_care_visuals();
         this.#animation_frame = requestAnimationFrame((time) => this.#update(time));
     }
 
@@ -60,14 +63,24 @@ export class Fish {
         return this.#age_ms < this.#fish_type.growth_time_ms;
     }
 
+    get is_ill() {
+        return this.#is_ill;
+    }
+
     feed(amount) {
         this.#hunger = Math.max(0, this.#hunger - amount);
         this.#sync_care_visuals();
     }
 
-    heal(amount) {
-        this.#health = Math.min(100, this.#health + amount);
+    cure_illness() {
+        if (!this.#is_ill) {
+            return false;
+        }
+
+        this.#is_ill = false;
+        this.#illness_risk = 15;
         this.#sync_care_visuals();
+        return true;
     }
 
     tick_care(delta_seconds, tank_dirt_level) {
@@ -79,14 +92,31 @@ export class Fish {
             this.#hunger + (this.#fish_type.base_hunger_rate * hunger_multiplier * delta_seconds)
         );
 
-        const hunger_pressure = Math.max(0, (this.#hunger - 78) / 22);
-        const dirt_pressure = Math.max(0, (tank_dirt_level - 72) / 28);
-        const damage_per_second = (hunger_pressure * 0.8) + (dirt_pressure * 0.65);
+        const underfed_pressure = Math.max(0, (this.#hunger - 65) / 35);
+        const dirt_illness_pressure = Math.max(0, (tank_dirt_level - 58) / 42);
+        const illness_pressure = (underfed_pressure * 0.75) + (dirt_illness_pressure * 0.9);
+
+        if (!this.#is_ill) {
+            if (illness_pressure > 0) {
+                this.#illness_risk = Math.min(100, this.#illness_risk + (illness_pressure * delta_seconds));
+            } else {
+                this.#illness_risk = Math.max(0, this.#illness_risk - (0.18 * delta_seconds));
+            }
+
+            if (this.#illness_risk >= 100) {
+                this.#is_ill = true;
+            }
+        }
+
+        const hunger_damage = Math.max(0, (this.#hunger - 85) / 15) * 0.45;
+        const dirt_damage = Math.max(0, (tank_dirt_level - 82) / 18) * 0.35;
+        const illness_damage = this.#is_ill ? 0.22 : 0;
+        const damage_per_second = hunger_damage + dirt_damage + illness_damage;
 
         if (damage_per_second > 0) {
             this.#health = Math.max(10, this.#health - (damage_per_second * delta_seconds));
-        } else if (this.#hunger < 55 && tank_dirt_level < 60) {
-            this.#health = Math.min(100, this.#health + (0.12 * delta_seconds));
+        } else if (!this.#is_ill && this.#hunger < 55 && tank_dirt_level < 60) {
+            this.#health = Math.min(100, this.#health + (0.1 * delta_seconds));
         }
 
         this.#sync_care_visuals();
@@ -158,5 +188,6 @@ export class Fish {
         this.#element.style.opacity = String(health_opacity);
         this.#element.classList.toggle("is-hungry", this.#hunger >= 72);
         this.#element.classList.toggle("is-unwell", this.#health < 65);
+        this.#element.classList.toggle("is-ill", this.#is_ill);
     }
 }
