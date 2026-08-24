@@ -4,6 +4,8 @@ export class Fish {
     #element;
     #starts_grown;
     #on_select;
+    #on_food_reached;
+    #food_target = null;
     #x;
     #y;
     #target_x;
@@ -18,11 +20,12 @@ export class Fish {
     #animation_frame = null;
     #target_timer = 0;
 
-    constructor({ fish_type, parent, start_x, start_y, starts_grown = false, on_select }) {
+    constructor({ fish_type, parent, start_x, start_y, starts_grown = false, on_select, on_food_reached }) {
         this.#fish_type = fish_type;
         this.#parent = parent;
         this.#starts_grown = starts_grown;
         this.#on_select = on_select;
+        this.#on_food_reached = on_food_reached;
         this.#age_ms = starts_grown ? fish_type.growth_time_ms : 0;
         this.#x = Math.max(0, start_x - 41);
         this.#y = Math.max(0, start_y);
@@ -91,6 +94,32 @@ export class Fish {
     set_selected(is_selected) {
         this.#element.classList.toggle("is-selected", is_selected);
         this.#element.setAttribute("aria-pressed", String(is_selected));
+    }
+
+    set_food_target(food_target) {
+        if (!food_target || food_target.is_consumed) {
+            return;
+        }
+
+        this.#food_target = food_target;
+        this.#target_x = Math.max(0, food_target.x - 41);
+        this.#target_y = Math.max(0, food_target.y - 30);
+        this.#target_timer = Number.POSITIVE_INFINITY;
+    }
+
+    clear_food_target(food_target = null) {
+        if (food_target && this.#food_target !== food_target) {
+            return;
+        }
+
+        this.#food_target = null;
+        this.#target_timer = 0;
+    }
+
+    is_hit_by(local_x, local_y, radius) {
+        const center_x = this.#x + 41;
+        const center_y = this.#y + 30;
+        return Math.hypot(center_x - local_x, center_y - local_y) <= radius;
     }
 
     feed(amount) {
@@ -179,10 +208,16 @@ export class Fish {
     #update(time) {
         const delta_seconds = Math.min((time - this.#last_time) / 1000, 0.05);
         this.#last_time = time;
-        this.#target_timer -= delta_seconds;
 
-        if (this.#target_timer <= 0) {
-            this.#choose_target();
+        if (this.#food_target?.is_consumed) {
+            this.clear_food_target(this.#food_target);
+        }
+
+        if (!this.#food_target) {
+            this.#target_timer -= delta_seconds;
+            if (this.#target_timer <= 0) {
+                this.#choose_target();
+            }
         }
 
         const delta_x = this.#target_x - this.#x;
@@ -190,11 +225,19 @@ export class Fish {
         const distance = Math.hypot(delta_x, delta_y);
 
         if (distance > 1) {
-            const step = Math.min(distance, this.#speed * delta_seconds);
+            const movement_speed = this.#food_target ? this.#speed * 1.8 : this.#speed;
+            const step = Math.min(distance, movement_speed * delta_seconds);
             this.#x += (delta_x / distance) * step;
             this.#y += (delta_y / distance) * step;
             this.#element.style.setProperty("--facing", delta_x < 0 ? "-1" : "1");
             this.#set_position();
+        }
+
+        if (this.#food_target && distance <= 9) {
+            const reached_food = this.#food_target;
+            this.#food_target = null;
+            this.#target_timer = 0;
+            this.#on_food_reached?.(this, reached_food);
         }
 
         this.#animation_frame = requestAnimationFrame((next_time) => this.#update(next_time));
