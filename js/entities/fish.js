@@ -72,6 +72,10 @@ export class Fish {
         return this.#is_ill;
     }
 
+    get food_target() {
+        return this.#food_target;
+    }
+
     get_info() {
         const growth_progress = Math.min(100, (this.#age_ms / this.#fish_type.growth_time_ms) * 100);
         const hunger_multiplier = this.is_growing ? this.#fish_type.growth_hunger_multiplier : 1;
