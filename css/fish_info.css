@@ -1,0 +1,180 @@
+.fish-info-panel {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 14px;
+    padding: 16px;
+    border: 1px solid rgba(95, 133, 146, 0.16);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.fish-info-panel[hidden] {
+    display: none;
+}
+
+.fish-info-preview {
+    display: grid;
+    place-items: center;
+    min-height: 128px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #d8f4f3, #b9e4e8);
+}
+
+.fish-info-preview img {
+    width: 110px;
+    height: 90px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 7px 4px rgba(41, 91, 103, 0.18));
+}
+
+.fish-info-main {
+    min-width: 0;
+}
+
+.fish-info-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.fish-info-header h3 {
+    margin: 1px 0 2px;
+    font-size: 1.3rem;
+}
+
+.fish-info-sprite-number {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.fish-info-close {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: #edf4f2;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 1.35rem;
+}
+
+.fish-info-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.fish-info-summary strong {
+    color: var(--ink);
+}
+
+#fish-info-condition.is-ill {
+    color: #9d566f;
+}
+
+.fish-info-meters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 13px;
+}
+
+.fish-info-meter {
+    padding: 10px 12px;
+    border: 1px solid rgba(95, 133, 146, 0.13);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.66);
+}
+
+.fish-info-meter > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 0.76rem;
+}
+
+.fish-info-meter strong {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.fish-info-meter progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    border: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e5eeec;
+}
+
+.fish-info-meter progress::-webkit-progress-bar {
+    background: #e5eeec;
+}
+
+.fish-info-meter progress::-webkit-progress-value {
+    border-radius: 999px;
+    background: #5cae95;
+}
+
+.fish-info-meter progress::-moz-progress-bar {
+    border-radius: 999px;
+    background: #5cae95;
+}
+
+.fish-info-meter--hunger progress::-webkit-progress-value {
+    background: #d99b52;
+}
+
+.fish-info-meter--hunger progress::-moz-progress-bar {
+    background: #d99b52;
+}
+
+.fish-info-meter--health progress::-webkit-progress-value {
+    background: #6fa8b8;
+}
+
+.fish-info-meter--health progress::-moz-progress-bar {
+    background: #6fa8b8;
+}
+
+@media (max-width: 700px) {
+    .fish-info-panel {
+        grid-template-columns: 108px minmax(0, 1fr);
+    }
+
+    .fish-info-preview {
+        min-height: 108px;
+    }
+
+    .fish-info-preview img {
+        width: 88px;
+        height: 72px;
+    }
+
+    .fish-info-meters {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .fish-info-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .fish-info-preview {
+        min-height: 96px;
+    }
+}
