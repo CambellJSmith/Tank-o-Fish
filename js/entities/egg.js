@@ -10,6 +10,9 @@ export class Egg {
     #on_hatch;
     #hatch_timer = null;
     #wiggle_timer = null;
+    #settle_timer = null;
+    #finish_hatch_timer = null;
+    #is_cancelled = false;
 
     constructor({ egg_type, parent, x, start_y, bottom_offset = 0, remaining_hatch_ms = null, on_hatch }) {
         this.#egg_type = egg_type;
@@ -31,10 +34,15 @@ export class Egg {
         this.#hatch_at_ms = Date.now() + this.#remaining_hatch_ms;
 
         requestAnimationFrame(() => {
-            this.#sync_settled_position();
+            if (!this.#is_cancelled) {
+                this.#sync_settled_position();
+            }
         });
 
-        window.setTimeout(() => this.#element.classList.add("is-settled"), Math.min(680, this.#remaining_hatch_ms));
+        this.#settle_timer = window.setTimeout(
+            () => this.#element.classList.add("is-settled"),
+            Math.min(680, this.#remaining_hatch_ms)
+        );
 
         const wiggle_delay = Math.max(0, this.#remaining_hatch_ms - 1800);
         this.#wiggle_timer = window.setTimeout(() => this.#element.classList.add("is-hatching"), wiggle_delay);
@@ -49,6 +57,10 @@ export class Egg {
         return this.#egg_type;
     }
 
+    get hatch_at_ms() {
+        return this.#hatch_at_ms;
+    }
+
     get_state() {
         const remaining_hatch_ms = this.#hatch_at_ms === null
             ? this.#remaining_hatch_ms
@@ -58,6 +70,15 @@ export class Egg {
             x: this.#x,
             remaining_hatch_ms
         };
+    }
+
+    cancel() {
+        this.#is_cancelled = true;
+        window.clearTimeout(this.#settle_timer);
+        window.clearTimeout(this.#wiggle_timer);
+        window.clearTimeout(this.#hatch_timer);
+        window.clearTimeout(this.#finish_hatch_timer);
+        this.#element.remove();
     }
 
     set_bottom_offset(bottom_offset) {
@@ -83,12 +104,19 @@ export class Egg {
     }
 
     #hatch() {
+        if (this.#is_cancelled) {
+            return;
+        }
+
         window.clearTimeout(this.#wiggle_timer);
         window.clearTimeout(this.#hatch_timer);
         this.#element.classList.remove("is-hatching");
         this.#element.classList.add("is-hatched");
 
-        window.setTimeout(() => {
+        this.#finish_hatch_timer = window.setTimeout(() => {
+            if (this.#is_cancelled) {
+                return;
+            }
             this.#element.remove();
             this.#on_hatch(this);
         }, 320);
