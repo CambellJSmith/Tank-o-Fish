@@ -42,8 +42,7 @@ export function calculate_fish_sale_value({
     const illness_history_multiplier = 1 + Math.min(0.25, Math.max(0, illness_count) * 0.04);
     const size_multiplier = 0.72 + (normalized_size * 0.28);
     const weight_multiplier = 0.72 + (Math.min(2.8, weight_ratio) * 0.28);
-
-    return Math.max(1, Math.round(
+    const calculated_value = Math.round(
         base_value
         * rarity_multiplier
         * growth_multiplier
@@ -51,5 +50,8 @@ export function calculate_fish_sale_value({
         * illness_history_multiplier
         * size_multiplier
         * weight_multiplier
-    ));
+    );
+    const minimum_value = normalized_growth >= 1 && normalized_health >= 1 ? 20 : 1;
+
+    return Math.max(minimum_value, calculated_value);
 }
