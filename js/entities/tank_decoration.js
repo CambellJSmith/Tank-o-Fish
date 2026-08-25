@@ -90,7 +90,7 @@ export class TankDecoration {
 
         event.preventDefault();
         const bounds = this.#parent.getBoundingClientRect();
-        this.#x = Math.max(28, Math.min(bounds.width - 28, event.clientX - bounds.left));
+        this.#x = Math.max(50, Math.min(bounds.width - 50, event.clientX - bounds.left));
         this.#sync_position();
     }
 
