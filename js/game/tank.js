@@ -1,7 +1,8 @@
 import { roll_fish_for_egg } from "../data/egg_types.js";
-import { Egg } from "../entities/egg.js";
+import { Egg } from "../entities/egg.js?v=20260825-2";
 import { Fish } from "../entities/fish.js";
 import { FoodPellet } from "../entities/food_pellet.js";
+import { TankDecoration } from "../entities/tank_decoration.js?v=20260825-2";
 import { TankSponge } from "../entities/tank_sponge.js";
 
 const DIRT_PER_PATCH = 8;
@@ -36,7 +37,10 @@ export class Tank {
     #fish = new Set();
     #food = new Set();
     #sponges = new Set();
+    #decorations = new Set();
     #dirt_patches = new Set();
+    #substrate_element = null;
+    #substrate_type = null;
     #selected_fish = null;
     #dirt_level = 0;
     #care_timer = null;
@@ -49,6 +53,7 @@ export class Tank {
         this.#on_fish_hatched = on_fish_hatched;
         this.#on_status_change = on_status_change;
         this.#on_fish_selected = on_fish_selected;
+        this.#element.style.setProperty("--tank-substrate-height", "0px");
         this.#care_timer = window.setInterval(() => this.#update_care(), 500);
         this.#emit_status();
     }
@@ -64,18 +69,53 @@ export class Tank {
     drop_egg(egg_type, client_x, client_y) {
         const bounds = this.#element.getBoundingClientRect();
         const x = Math.max(24, Math.min(bounds.width - 24, client_x - bounds.left));
-        const start_y = Math.max(12, Math.min(bounds.height - 120, client_y - bounds.top - 23));
-
+        const start_y = Math.max(12, Math.min(bounds.height - 70, client_y - bounds.top - 23));
         const egg = new Egg({
             egg_type,
             parent: this.#entity_layer,
             x,
             start_y,
+            bottom_offset: this.#substrate_height,
             on_hatch: (hatched_egg) => this.#hatch_fish(hatched_egg)
         });
 
         this.#eggs.add(egg);
         egg.mount();
+    }
+
+    place_decoration(decoration_type, client_x, client_y) {
+        if (!this.contains_point(client_x, client_y)) {
+            return false;
+        }
+
+        const bounds = this.#element.getBoundingClientRect();
+        const x = Math.max(34, Math.min(bounds.width - 34, client_x - bounds.left));
+        const decoration = new TankDecoration({ decoration_type, parent: this.#element, x });
+        this.#decorations.add(decoration);
+        decoration.mount();
+        return true;
+    }
+
+    set_substrate(substrate_type, client_x, client_y) {
+        if (!this.contains_point(client_x, client_y)) {
+            return false;
+        }
+
+        this.#substrate_element?.remove();
+        const substrate = document.createElement("div");
+        substrate.className = `tank-substrate tank-substrate--${substrate_type.visual}`;
+        substrate.style.height = `${substrate_type.height_px}px`;
+        substrate.setAttribute("aria-label", substrate_type.name);
+        substrate.setAttribute("aria-hidden", "true");
+        this.#substrate_element = substrate;
+        this.#substrate_type = substrate_type;
+        this.#element.style.setProperty("--tank-substrate-height", `${substrate_type.height_px}px`);
+        this.#element.append(substrate);
+
+        for (const egg of this.#eggs) {
+            egg.set_bottom_offset(substrate_type.height_px);
+        }
+        return true;
     }
 
     drop_food(client_x, client_y) {
@@ -87,12 +127,13 @@ export class Tank {
         const center_x = client_x - bounds.left;
         const center_y = client_y - bounds.top;
         const pellet_count = Math.min(36, Math.max(6, this.#fish.size * 3));
+        const max_y = Math.max(18, bounds.height - this.#substrate_height - 20);
 
         for (let index = 0; index < pellet_count; index += 1) {
             const angle = Math.random() * Math.PI * 2;
             const radius = Math.random() * 34;
             const x = Math.max(12, Math.min(bounds.width - 12, center_x + (Math.cos(angle) * radius)));
-            const y = Math.max(18, Math.min(bounds.height - 82, center_y + (Math.sin(angle) * radius)));
+            const y = Math.max(18, Math.min(max_y, center_y + (Math.sin(angle) * radius)));
             const pellet = new FoodPellet({ parent: this.#entity_layer, x, y, nutrition: 15 });
             this.#food.add(pellet);
             pellet.mount();
@@ -184,6 +225,10 @@ export class Tank {
         return sold_info;
     }
 
+    get #substrate_height() {
+        return this.#substrate_type?.height_px ?? 0;
+    }
+
     #scrub_with_sponge({ start_x, start_y, end_x, end_y, max_patch_completions }) {
         if (this.#dirt_patches.size === 0 || max_patch_completions <= 0) {
             return { removed_dirt: 0, cleaned_patches: 0 };
@@ -264,7 +309,7 @@ export class Tank {
         const fish_type = roll_fish_for_egg(egg.egg_type);
         this.#add_fish(fish_type, {
             start_x: egg.x,
-            start_y: Math.max(70, this.#entity_layer.clientHeight - 155)
+            start_y: Math.max(70, this.#entity_layer.clientHeight - this.#substrate_height - 95)
         });
         this.#on_fish_hatched(fish_type);
     }
@@ -331,7 +376,7 @@ export class Tank {
         const height = Math.max(1, this.#element.clientHeight);
         const horizontal_margin = Math.min(36, width * 0.14);
         const top_margin = Math.min(48, height * 0.14);
-        const bottom_margin = Math.min(102, height * 0.22);
+        const bottom_margin = Math.min(120, this.#substrate_height + 44);
         const size = Math.min(74, Math.max(38, width * (0.12 + (Math.random() * 0.08))));
         const x = horizontal_margin + (Math.random() * Math.max(1, width - (horizontal_margin * 2)));
         const y = top_margin + (Math.random() * Math.max(1, height - top_margin - bottom_margin));
