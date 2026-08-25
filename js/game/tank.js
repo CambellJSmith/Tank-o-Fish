@@ -519,6 +519,22 @@ export class Tank {
         this.#on_fish_hatched(fish_type);
     }
 
+    #hatch_overdue_egg(egg) {
+        if (!this.#eggs.delete(egg)) {
+            return null;
+        }
+
+        egg.cancel();
+        const fish_type = roll_fish_for_egg(egg.egg_type);
+        this.#add_fish(fish_type, {
+            start_x: egg.x,
+            start_y: Math.max(70, this.#entity_layer.clientHeight - this.#substrate_height - 95),
+            emit_status: false
+        });
+        this.#on_fish_hatched(fish_type);
+        return fish_type;
+    }
+
     #eat_food(fish, pellet) {
         if (!this.#food.has(pellet) || !pellet.consume()) {
             this.#assign_food_targets();
@@ -623,6 +639,24 @@ export class Tank {
         }
     }
 
+    #simulate_elapsed_interval(start_ms, end_ms) {
+        const due_eggs = Array.from(this.#eggs)
+            .filter((egg) => Number.isFinite(egg.hatch_at_ms) && egg.hatch_at_ms <= end_ms)
+            .sort((a, b) => a.hatch_at_ms - b.hatch_at_ms);
+
+        let simulated_until_ms = start_ms;
+        for (const egg of due_eggs) {
+            if (!this.#eggs.has(egg)) {
+                continue;
+            }
+            const hatch_at_ms = Math.max(simulated_until_ms, Math.max(start_ms, egg.hatch_at_ms));
+            this.#simulate_care((hatch_at_ms - simulated_until_ms) / 1000);
+            this.#hatch_overdue_egg(egg);
+            simulated_until_ms = hatch_at_ms;
+        }
+        this.#simulate_care((end_ms - simulated_until_ms) / 1000);
+    }
+
     #advance_care_step(delta_seconds, sync_fish_visuals) {
         const fish_count = this.#fish.size;
         if (fish_count > 0) {
@@ -635,14 +669,15 @@ export class Tank {
     }
 
     #update_care() {
+        const previous_care_time = this.#last_care_time;
         const now = Date.now();
-        const delta_seconds = Math.max(0, (now - this.#last_care_time) / 1000);
+        const delta_seconds = Math.max(0, (now - previous_care_time) / 1000);
         this.#last_care_time = now;
 
         if (delta_seconds <= 2) {
             this.#advance_care_step(delta_seconds, true);
         } else {
-            this.#simulate_care(delta_seconds);
+            this.#simulate_elapsed_interval(previous_care_time, now);
             for (const fish of this.#fish) {
                 fish.sync_visuals();
             }
