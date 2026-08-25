@@ -49,7 +49,11 @@
 }
 
 .status-meter progress::-webkit-progress-value,
-.fish-info-meter progress::-webkit-progress-value,
+.fish-info-meter progress::-webkit-progress-value {
+    border-radius: 1px;
+    background: var(--success);
+}
+
 .status-meter progress::-moz-progress-bar,
 .fish-info-meter progress::-moz-progress-bar {
     border-radius: 1px;
@@ -57,14 +61,20 @@
 }
 
 .status-meter--hunger progress::-webkit-progress-value,
-.fish-info-meter--hunger progress::-webkit-progress-value,
+.fish-info-meter--hunger progress::-webkit-progress-value {
+    background: var(--warning);
+}
+
 .status-meter--hunger progress::-moz-progress-bar,
 .fish-info-meter--hunger progress::-moz-progress-bar {
     background: var(--warning);
 }
 
 .status-meter--health progress::-webkit-progress-value,
-.fish-info-meter--health progress::-webkit-progress-value,
+.fish-info-meter--health progress::-webkit-progress-value {
+    background: #628da4;
+}
+
 .status-meter--health progress::-moz-progress-bar,
 .fish-info-meter--health progress::-moz-progress-bar {
     background: #628da4;
