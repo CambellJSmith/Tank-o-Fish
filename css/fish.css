@@ -1,4 +1,6 @@
 .fish {
+    position: absolute;
+    z-index: 8;
     width: 82px;
     height: 60px;
     padding: 0;
