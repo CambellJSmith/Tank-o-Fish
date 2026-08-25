@@ -30,6 +30,14 @@ export class FoodPellet {
         return this.#is_consumed;
     }
 
+    get_state() {
+        return {
+            x: this.#x,
+            y: this.#y,
+            nutrition: this.#nutrition
+        };
+    }
+
     mount() {
         this.#element.style.left = `${this.#x}px`;
         this.#element.style.top = `${this.#y}px`;
