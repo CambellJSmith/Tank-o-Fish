@@ -15,7 +15,7 @@
     <main class="game-shell">
         <header class="top-bar">
             <div>
-                <p class="eyebrow">tiny_aquarium</p>
+                <p class="eyebrow">aquarium_manager</p>
                 <h1>Tank-o-Fish</h1>
             </div>
 
@@ -31,10 +31,10 @@
         <section class="tank-card" aria-labelledby="tank-heading">
             <div class="tank-card__heading">
                 <div>
-                    <p class="eyebrow">your_tank</p>
-                    <h2 id="tank-heading">home_aquarium</h2>
+                    <p class="eyebrow">aquarium</p>
+                    <h2 id="tank-heading">tank_viewport</h2>
                 </div>
-                <p class="tank-help">click_fish_to_inspect_or_sell_them._larger_heavier_healthier_rarer_fish_are_worth_more.</p>
+                <p class="tank-help">select_a_fish_for_properties_and_sale._drag_care_items_directly_into_the_viewport.</p>
             </div>
 
             <div class="tank-status" aria-label="tank_status">
@@ -86,7 +86,7 @@
                 <div class="fish-info-main">
                     <div class="fish-info-header">
                         <div>
-                            <p class="eyebrow">selected_fish</p>
+                            <p class="eyebrow">fish_properties</p>
                             <h3 id="fish-info-name">fish</h3>
                             <span id="fish-info-sprite-number" class="fish-info-sprite-number"></span>
                         </div>
@@ -131,19 +131,19 @@
 
         <section class="egg-tray-card" aria-labelledby="egg-tray-heading">
             <div>
-                <p class="eyebrow">egg_tray</p>
-                <h2 id="egg-tray-heading">ready_to_place</h2>
+                <p class="eyebrow">inventory</p>
+                <h2 id="egg-tray-heading">eggs</h2>
             </div>
             <div id="egg-tray" class="egg-tray">
-                <p id="egg-tray-empty" class="empty-message">your_purchased_eggs_will_appear_here.</p>
+                <p id="egg-tray-empty" class="empty-message">purchased_eggs_appear_here.</p>
             </div>
         </section>
 
         <section class="supply-card" aria-labelledby="supply-heading">
             <div class="supply-card__heading">
-                <p class="eyebrow">care_supplies</p>
-                <h2 id="supply-heading">tank_cupboard</h2>
-                <p class="supply-help">drag_food_into_the_tank._drop_sponges_into_the_water_and_leave_them_there,_then_drag_them_over_dirt_when_needed._each_sponge_cleans_25_patches._spray_medicine_through_ill_fish.</p>
+                <p class="eyebrow">inventory</p>
+                <h2 id="supply-heading">care_tools</h2>
+                <p class="supply-help">drop_food_in_the_tank._place_sponges_in_the_water_and_reuse_them._spray_medicine_through_ill_fish.</p>
             </div>
             <div id="supply-inventory" class="supply-inventory"></div>
         </section>
@@ -152,13 +152,13 @@
     <dialog id="shop-dialog" class="shop-dialog">
         <form method="dialog" class="shop-dialog__header">
             <div>
-                <p class="eyebrow">aquarium_shop</p>
-                <h2>stock_up</h2>
+                <p class="eyebrow">shop</p>
+                <h2>aquarium_supplies</h2>
             </div>
             <button class="icon-button" type="submit" aria-label="close_shop">×</button>
         </form>
 
-        <p class="shop-dialog__intro">buy_mystery_eggs_to_discover_fish_and_supplies_you_physically_use_in_the_tank.</p>
+        <p class="shop-dialog__intro">purchase_mystery_eggs_and_physical_care_tools_for_the_aquarium.</p>
 
         <section class="shop-section" aria-labelledby="egg-shop-heading">
             <div class="shop-section__heading">
@@ -170,8 +170,8 @@
 
         <section class="shop-section" aria-labelledby="supply-shop-heading">
             <div class="shop-section__heading">
-                <h3 id="supply-shop-heading">care_supplies</h3>
-                <span>drag · place · spray</span>
+                <h3 id="supply-shop-heading">care_tools</h3>
+                <span>food · sponge · medicine</span>
             </div>
             <div id="supply-shop-list" class="shop-list shop-list--supplies"></div>
         </section>
