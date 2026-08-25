@@ -1,12 +1,16 @@
+import { DECORATION_ITEMS } from "../data/decorations.js?v=20260825-2";
 import { EGG_TYPES } from "../data/egg_types.js";
+import { SUBSTRATE_ITEMS } from "../data/substrates.js?v=20260825-2";
 import { SUPPLY_ITEMS } from "../data/supply_items.js";
 import { EggInventory } from "./egg_inventory.js";
 import { EggShop } from "./egg_shop.js";
 import { FishInfoPanel } from "./fish_info_panel.js";
+import { PlacementInventory } from "./placement_inventory.js?v=20260825-2";
+import { PlacementShop } from "./placement_shop.js?v=20260825-2";
 import { Shop } from "./shop.js";
 import { SupplyInventory } from "./supply_inventory.js";
 import { SupplyShop } from "./supply_shop.js";
-import { Tank } from "./tank.js";
+import { Tank } from "./tank.js?v=20260825-2";
 
 export class Game {
     #money = 80;
@@ -14,8 +18,12 @@ export class Game {
     #shop;
     #egg_shop;
     #supply_shop;
+    #decoration_shop;
+    #substrate_shop;
     #inventory;
     #supply_inventory;
+    #decoration_inventory;
+    #substrate_inventory;
     #fish_info_panel;
     #tank;
     #encountered_species_ids = new Set();
@@ -71,6 +79,22 @@ export class Game {
             on_interaction: (interaction) => this.#handle_supply_interaction(interaction)
         });
 
+        this.#decoration_inventory = new PlacementInventory({
+            container: document.querySelector("#decoration-inventory"),
+            empty_message: document.querySelector("#decoration-inventory-empty"),
+            items: DECORATION_ITEMS,
+            kind: "decoration",
+            on_drop: (item, client_x, client_y) => this.#place_decoration(item, client_x, client_y)
+        });
+
+        this.#substrate_inventory = new PlacementInventory({
+            container: document.querySelector("#substrate-inventory"),
+            empty_message: document.querySelector("#substrate-inventory-empty"),
+            items: SUBSTRATE_ITEMS,
+            kind: "substrate",
+            on_drop: (item, client_x, client_y) => this.#apply_substrate(item, client_x, client_y)
+        });
+
         this.#shop = new Shop({
             dialog: document.querySelector("#shop-dialog"),
             open_button: document.querySelector("#shop-button")
@@ -86,6 +110,20 @@ export class Game {
             list_element: document.querySelector("#supply-shop-list"),
             supply_items: SUPPLY_ITEMS,
             on_purchase: (item) => this.#purchase_supply(item)
+        });
+
+        this.#decoration_shop = new PlacementShop({
+            list_element: document.querySelector("#decoration-shop-list"),
+            items: DECORATION_ITEMS,
+            kind: "decoration",
+            on_purchase: (item) => this.#purchase_decoration(item)
+        });
+
+        this.#substrate_shop = new PlacementShop({
+            list_element: document.querySelector("#substrate-shop-list"),
+            items: SUBSTRATE_ITEMS,
+            kind: "substrate",
+            on_purchase: (item) => this.#purchase_substrate(item)
         });
 
         this.#sync_money();
@@ -115,9 +153,51 @@ export class Game {
         this.#announce(`${item.name}_added_to_your_supplies.`);
     }
 
+    #purchase_decoration(item) {
+        if (this.#money < item.price) {
+            this.#announce(`not_enough_coins_for_${item.name}.`);
+            return;
+        }
+
+        this.#money -= item.price;
+        this.#decoration_inventory.add(item.id);
+        this.#sync_money();
+        this.#announce(`${item.name}_added_to_decoration_inventory.`);
+    }
+
+    #purchase_substrate(item) {
+        if (this.#money < item.price) {
+            this.#announce(`not_enough_coins_for_${item.name}.`);
+            return;
+        }
+
+        this.#money -= item.price;
+        this.#substrate_inventory.add(item.id);
+        this.#sync_money();
+        this.#announce(`${item.name}_bag_added_to_inventory.`);
+    }
+
     #drop_egg(egg_type, client_x, client_y) {
         this.#tank.drop_egg(egg_type, client_x, client_y);
         this.#announce(`${egg_type.name}_is_settling_into_the_tank.`);
+    }
+
+    #place_decoration(item, client_x, client_y) {
+        if (!this.#tank.place_decoration(item, client_x, client_y)) {
+            this.#announce("drop_the_decoration_inside_the_tank.");
+            return false;
+        }
+        this.#announce(`${item.name}_placed._drag_it_again_any_time_to_reposition_it.`);
+        return true;
+    }
+
+    #apply_substrate(item, client_x, client_y) {
+        if (!this.#tank.set_substrate(item, client_x, client_y)) {
+            this.#announce("drop_the_substrate_bag_inside_the_tank.");
+            return false;
+        }
+        this.#announce(`${item.name}_installed_as_the_tank_bottom.`);
+        return true;
     }
 
     #sell_selected_fish() {
@@ -219,6 +299,8 @@ export class Game {
         this.#money_element.textContent = String(this.#money);
         this.#egg_shop.set_money(this.#money);
         this.#supply_shop.set_money(this.#money);
+        this.#decoration_shop.set_money(this.#money);
+        this.#substrate_shop.set_money(this.#money);
     }
 
     #sync_tank_status(status) {
