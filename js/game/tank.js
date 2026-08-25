@@ -76,6 +76,10 @@ export class Tank {
             && client_y <= bounds.bottom;
     }
 
+    catch_up() {
+        return this.#update_care();
+    }
+
     get_state() {
         return {
             dirt_level: this.#dirt_level,
@@ -615,18 +619,18 @@ export class Tank {
         const step_count = Math.min(MAX_CATCH_UP_STEPS, desired_steps);
         const step_seconds = safe_total_seconds / step_count;
         for (let step = 0; step < step_count; step += 1) {
-            this.#advance_care_step(step_seconds);
+            this.#advance_care_step(step_seconds, false);
         }
     }
 
-    #advance_care_step(delta_seconds) {
+    #advance_care_step(delta_seconds, sync_fish_visuals) {
         const fish_count = this.#fish.size;
         if (fish_count > 0) {
             const dirt_rate = 0.035 + (fish_count * 0.035) + (Math.pow(fish_count, 1.3) * 0.012);
             this.#dirt_level = Math.min(100, this.#dirt_level + (dirt_rate * delta_seconds));
         }
         for (const fish of this.#fish) {
-            fish.tick_care(delta_seconds, this.#dirt_level, false);
+            fish.tick_care(delta_seconds, this.#dirt_level, sync_fish_visuals);
         }
     }
 
@@ -634,14 +638,21 @@ export class Tank {
         const now = Date.now();
         const delta_seconds = Math.max(0, (now - this.#last_care_time) / 1000);
         this.#last_care_time = now;
-        this.#simulate_care(delta_seconds);
+
+        if (delta_seconds <= 2) {
+            this.#advance_care_step(delta_seconds, true);
+        } else {
+            this.#simulate_care(delta_seconds);
+            for (const fish of this.#fish) {
+                fish.sync_visuals();
+            }
+        }
+
         this.#ensure_dirt_patches();
         this.#sync_dirt_visuals();
-        for (const fish of this.#fish) {
-            fish.sync_visuals();
-        }
         this.#assign_food_targets();
         this.#emit_status();
+        return delta_seconds;
     }
 
     #sync_dirt_visuals() {
