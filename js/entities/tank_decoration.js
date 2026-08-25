@@ -48,6 +48,7 @@ export class TankDecoration {
 
     mount() {
         this.#parent.append(this.#element);
+        this.#clamp_x();
         this.#sync_position();
     }
 
@@ -90,7 +91,8 @@ export class TankDecoration {
 
         event.preventDefault();
         const bounds = this.#parent.getBoundingClientRect();
-        this.#x = Math.max(50, Math.min(bounds.width - 50, event.clientX - bounds.left));
+        this.#x = event.clientX - bounds.left;
+        this.#clamp_x();
         this.#sync_position();
     }
 
@@ -105,6 +107,11 @@ export class TankDecoration {
         }
         this.#active_pointer_id = null;
         this.#element.classList.remove("is-moving");
+    }
+
+    #clamp_x() {
+        const width = Math.max(100, this.#parent.clientWidth);
+        this.#x = Math.max(50, Math.min(width - 50, this.#x));
     }
 
     #sync_position() {
