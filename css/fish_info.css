@@ -1,12 +1,11 @@
 .fish-info-panel {
-    display: grid;
-    grid-template-columns: 150px minmax(0, 1fr);
-    gap: 18px;
-    margin-top: 14px;
-    padding: 16px;
-    border: 1px solid rgba(95, 133, 146, 0.16);
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.72);
+    grid-column: 2;
+    grid-row: 3;
+    min-width: 0;
+    max-height: 560px;
+    overflow-y: auto;
+    border-left: 1px solid var(--panel-border);
+    background: var(--panel);
 }
 
 .fish-info-panel[hidden] {
@@ -16,17 +15,24 @@
 .fish-info-preview {
     display: grid;
     place-items: center;
-    min-height: 128px;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #d8f4f3, #b9e4e8);
+    min-height: 112px;
+    border-bottom: 1px solid var(--panel-border);
+    background-color: #202020;
+    background-image:
+        linear-gradient(45deg, #242424 25%, transparent 25%),
+        linear-gradient(-45deg, #242424 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #242424 75%),
+        linear-gradient(-45deg, transparent 75%, #242424 75%);
+    background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+    background-size: 12px 12px;
 }
 
 .fish-info-preview img {
-    width: 110px;
-    height: 90px;
+    width: 106px;
+    height: 82px;
     object-fit: contain;
     image-rendering: pixelated;
-    filter: drop-shadow(0 7px 4px rgba(41, 91, 103, 0.18));
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35));
 }
 
 .fish-info-main {
@@ -37,62 +43,95 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--panel-raised);
 }
 
 .fish-info-header h3 {
     margin: 1px 0 2px;
-    font-size: 1.3rem;
+    font-size: 0.86rem;
+}
+
+.fish-info-header .eyebrow {
+    margin-bottom: 1px;
 }
 
 .fish-info-sprite-number {
-    color: var(--muted);
-    font-size: 0.75rem;
+    color: var(--faint);
+    font-size: 0.64rem;
     font-variant-numeric: tabular-nums;
 }
 
 .fish-info-close {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
-    border: 0;
-    border-radius: 50%;
-    background: #edf4f2;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #171717;
+    border-radius: 2px;
+    background: #3a3a3a;
     color: var(--ink);
     cursor: pointer;
-    font-size: 1.35rem;
+    font-size: 0.92rem;
+    line-height: 1;
+}
+
+.fish-info-close:hover {
+    background: #454545;
 }
 
 .fish-info-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 5px 8px;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: 0.68rem;
+}
+
+.fish-info-summary > span {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 24px;
+    align-items: center;
+    border-bottom: 1px solid #343434;
+}
+
+.fish-info-summary > span:last-child {
+    border-bottom: 0;
 }
 
 .fish-info-summary strong {
     color: var(--ink);
+    font-weight: 500;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 #fish-info-condition.is-ill {
-    color: #9d566f;
+    color: #cf858a;
 }
 
 .fish-info-meters {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 13px;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0 8px 6px;
+    border-top: 1px solid var(--panel-border);
 }
 
 .fish-info-meter {
-    padding: 10px 12px;
-    border: 1px solid rgba(95, 133, 146, 0.13);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.66);
+    padding: 7px 0;
+    border-bottom: 1px solid #343434;
+    background: transparent;
+}
+
+.fish-info-meter:last-child {
+    border-bottom: 0;
 }
 
 .fish-info-meter > div {
@@ -100,66 +139,25 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     color: var(--muted);
-    font-size: 0.76rem;
+    font-size: 0.66rem;
 }
 
 .fish-info-meter strong {
     color: var(--ink);
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
 
-.fish-info-meter progress {
-    display: block;
-    width: 100%;
-    height: 8px;
-    border: 0;
-    border-radius: 999px;
-    overflow: hidden;
-    background: #e5eeec;
-}
-
-.fish-info-meter progress::-webkit-progress-bar {
-    background: #e5eeec;
-}
-
-.fish-info-meter progress::-webkit-progress-value {
-    border-radius: 999px;
-    background: #5cae95;
-}
-
-.fish-info-meter progress::-moz-progress-bar {
-    border-radius: 999px;
-    background: #5cae95;
-}
-
-.fish-info-meter--hunger progress::-webkit-progress-value {
-    background: #d99b52;
-}
-
-.fish-info-meter--hunger progress::-moz-progress-bar {
-    background: #d99b52;
-}
-
-.fish-info-meter--health progress::-webkit-progress-value {
-    background: #6fa8b8;
-}
-
-.fish-info-meter--health progress::-moz-progress-bar {
-    background: #6fa8b8;
-}
-
 .fish-info-sale {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    margin-top: 13px;
-    padding: 11px 12px;
-    border: 1px solid rgba(196, 151, 68, 0.2);
-    border-radius: 14px;
-    background: rgba(255, 247, 217, 0.72);
+    gap: 8px;
+    padding: 8px;
+    border-top: 1px solid var(--panel-border);
+    background: #242424;
 }
 
 .fish-info-sale span,
@@ -169,67 +167,88 @@
 
 .fish-info-sale span {
     color: var(--muted);
-    font-size: 0.74rem;
+    font-size: 0.62rem;
 }
 
 .fish-info-sale strong {
-    margin-top: 2px;
-    color: #785f25;
-    font-size: 1rem;
+    margin-top: 1px;
+    color: var(--ink);
+    font-size: 0.78rem;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
 
 .fish-info-sell {
-    min-width: 116px;
-    padding: 10px 14px;
-    border: 0;
-    border-radius: 12px;
-    color: white;
-    background: #4e98a7;
+    min-width: 92px;
+    min-height: 28px;
+    padding: 4px 10px;
+    border: 1px solid #2d4e79;
+    border-radius: 2px;
+    color: #f2f5fa;
+    background: var(--accent-muted);
     cursor: pointer;
-    font-weight: 800;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.fish-info-sell:hover {
+    background: var(--accent);
 }
 
 .fish-info-sell:focus-visible,
 .fish-info-close:focus-visible {
-    outline: 3px solid rgba(78, 152, 167, 0.32);
-    outline-offset: 2px;
+    outline: 1px solid #8fb7f4;
+    outline-offset: 1px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 920px) {
     .fish-info-panel {
-        grid-template-columns: 108px minmax(0, 1fr);
+        grid-column: 1;
+        grid-row: auto;
+        max-height: none;
+        border-top: 1px solid var(--panel-border);
+        border-left: 0;
+    }
+
+    .fish-info-panel:not([hidden]) {
+        display: grid;
+        grid-template-columns: 130px minmax(0, 1fr);
     }
 
     .fish-info-preview {
-        min-height: 108px;
+        min-height: 0;
+        border-right: 1px solid var(--panel-border);
+        border-bottom: 0;
     }
 
-    .fish-info-preview img {
-        width: 88px;
-        height: 72px;
+    .fish-info-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 12px;
     }
 
     .fish-info-meters {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .fish-info-meter {
+        border-bottom: 0;
     }
 }
 
-@media (max-width: 480px) {
-    .fish-info-panel {
+@media (max-width: 620px) {
+    .fish-info-panel:not([hidden]) {
         grid-template-columns: 1fr;
     }
 
     .fish-info-preview {
-        min-height: 96px;
+        min-height: 92px;
+        border-right: 0;
+        border-bottom: 1px solid var(--panel-border);
     }
 
-    .fish-info-sale {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .fish-info-sell {
-        width: 100%;
+    .fish-info-summary,
+    .fish-info-meters {
+        grid-template-columns: 1fr;
     }
 }
