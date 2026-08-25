@@ -52,6 +52,13 @@ export class TankDecoration {
         this.#sync_position();
     }
 
+    get_state() {
+        return {
+            decoration_id: this.#decoration_type.id,
+            x: this.#x
+        };
+    }
+
     destroy() {
         if (this.#active_pointer_id !== null && this.#element.hasPointerCapture(this.#active_pointer_id)) {
             this.#element.releasePointerCapture(this.#active_pointer_id);

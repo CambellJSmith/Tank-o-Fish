@@ -29,6 +29,24 @@ export class EggInventory {
         this.#sync_empty_message();
     }
 
+    get_state() {
+        return Array.from(this.#items.values(), (item) => item.egg_type.id);
+    }
+
+    restore_state(egg_types) {
+        for (const item of this.#items.values()) {
+            item.element.remove();
+        }
+        this.#items.clear();
+
+        for (const egg_type of egg_types) {
+            if (egg_type) {
+                this.add_egg(egg_type);
+            }
+        }
+        this.#sync_empty_message();
+    }
+
     #start_drag(event, item) {
         if (event.pointerType === "mouse" && event.button !== 0) {
             return;

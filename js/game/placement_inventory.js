@@ -38,6 +38,19 @@ export class PlacementInventory {
         return this.#counts.get(item_id) ?? 0;
     }
 
+    get_state() {
+        return Object.fromEntries(this.#counts);
+    }
+
+    restore_state(state) {
+        for (const item of this.#items) {
+            const saved_count = Number(state?.[item.id]);
+            this.#counts.set(item.id, Number.isFinite(saved_count) ? Math.max(0, Math.floor(saved_count)) : 0);
+            this.#sync_item(item.id);
+        }
+        this.#sync_empty_message();
+    }
+
     #render() {
         const fragment = document.createDocumentFragment();
 

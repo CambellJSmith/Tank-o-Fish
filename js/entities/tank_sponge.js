@@ -7,13 +7,16 @@ export class TankSponge {
     #on_exhausted;
     #x;
     #y;
-    #uses_remaining = SPONGE_MAX_CLEANS;
+    #uses_remaining;
     #active_pointer_id = null;
 
-    constructor({ parent, x, y, on_scrub, on_exhausted }) {
+    constructor({ parent, x, y, uses_remaining = SPONGE_MAX_CLEANS, on_scrub, on_exhausted }) {
         this.#parent = parent;
         this.#x = x;
         this.#y = y;
+        this.#uses_remaining = Number.isFinite(uses_remaining)
+            ? Math.max(0, Math.min(SPONGE_MAX_CLEANS, Math.floor(uses_remaining)))
+            : SPONGE_MAX_CLEANS;
         this.#on_scrub = on_scrub;
         this.#on_exhausted = on_exhausted;
         this.#element = this.#create_element();
@@ -21,6 +24,14 @@ export class TankSponge {
 
     get uses_remaining() {
         return this.#uses_remaining;
+    }
+
+    get_state() {
+        return {
+            x: this.#x,
+            y: this.#y,
+            uses_remaining: this.#uses_remaining
+        };
     }
 
     mount() {

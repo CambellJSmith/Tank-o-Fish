@@ -20,9 +20,16 @@ A small vanilla HTML, CSS, and JavaScript aquarium game prototype.
 - buy tank decorations including rocks, coral, skulls, diving helmets, treasure chests, castle ruins, arches, driftwood, anchors, seaweed, shells, and toy submarines
 - drag purchased decorations into the tank to place them, then drag placed decorations again whenever you want to rearrange the layout
 - buy different sands, gravels, coral crush, and planted soil as substrate bags; drag a bag into the aquarium to install or replace the entire bottom layer
+- leave the game and come back later; the aquarium is saved locally and catches up using real elapsed time, including egg hatching, fish growth, hunger, illness, health, weight gain, and tank dirt
 - keep fish fed and the tank clean so cured fish can gradually recover health
 
 Fish use the PNG artwork already stored in `FishSprites/`, and each existing sprite maps to its own species.
+
+## Persistence and offline progression
+
+The game stores a versioned snapshot in browser `localStorage` every few seconds and when the page is hidden or unloaded. The snapshot includes money, discoveries, purchased inventory, fish state, in-tank eggs, food, placed sponges, decorations, substrate, and tank dirt.
+
+When the game is reopened, it compares the saved timestamp with the current wall clock and simulates the missing time. Egg hatch events are processed in chronological order, so a fish that hatches partway through an absence only receives growth and care simulation for the time after it actually hatched. A suspended background tab uses the same wall-clock catch-up logic when it becomes active again.
 
 ## Run locally
 
@@ -40,5 +47,5 @@ Then open `http://localhost:8000` in a browser.
 - `css/` — editor-style UI, aquarium visuals, fish rendering, care interactions, decoration/substrate visuals, fish info panel, and shop UI
 - `js/data/` — mystery egg pools, fish species, fish valuation, care supplies, decorations, and substrate definitions
 - `js/entities/` — egg, fish, food-pellet, persistent sponge, and movable tank-decoration runtime entities
-- `js/game/` — shop, inventories, direct care tools, placement systems, tank simulation, fish inspection/selling, and main game orchestration
+- `js/game/` — shop, inventories, save system, direct care tools, placement systems, wall-clock/offline tank simulation, fish inspection/selling, and main game orchestration
 - `FishSprites/` — source fish sprite artwork

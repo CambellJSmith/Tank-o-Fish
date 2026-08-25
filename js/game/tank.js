@@ -1,13 +1,23 @@
-import { roll_fish_for_egg } from "../data/egg_types.js";
-import { Egg } from "../entities/egg.js?v=20260825-2";
-import { Fish } from "../entities/fish.js";
-import { FoodPellet } from "../entities/food_pellet.js";
-import { TankDecoration } from "../entities/tank_decoration.js?v=20260825-2";
-import { TankSponge } from "../entities/tank_sponge.js";
+import { DECORATION_ITEMS } from "../data/decorations.js?v=20260825-3";
+import { EGG_TYPES, roll_fish_for_egg } from "../data/egg_types.js";
+import { FISH_SPECIES } from "../data/fish_species.js";
+import { SUBSTRATE_ITEMS } from "../data/substrates.js?v=20260825-3";
+import { Egg } from "../entities/egg.js?v=20260825-3";
+import { Fish } from "../entities/fish.js?v=20260825-3";
+import { FoodPellet } from "../entities/food_pellet.js?v=20260825-3";
+import { TankDecoration } from "../entities/tank_decoration.js?v=20260825-3";
+import { TankSponge } from "../entities/tank_sponge.js?v=20260825-3";
 
 const DIRT_PER_PATCH = 8;
 const SPONGE_RADIUS = 28;
 const MEDICINE_RADIUS = 66;
+const MAX_CATCH_UP_STEPS = 10000;
+const TARGET_CATCH_UP_STEP_SECONDS = 2;
+
+const EGG_TYPES_BY_ID = new Map(EGG_TYPES.map((egg_type) => [egg_type.id, egg_type]));
+const FISH_SPECIES_BY_ID = new Map(FISH_SPECIES.map((fish_type) => [fish_type.species_id, fish_type]));
+const DECORATIONS_BY_ID = new Map(DECORATION_ITEMS.map((item) => [item.id, item]));
+const SUBSTRATES_BY_ID = new Map(SUBSTRATE_ITEMS.map((item) => [item.id, item]));
 
 function distance_to_segment(point_x, point_y, start_x, start_y, end_x, end_y) {
     const segment_x = end_x - start_x;
@@ -44,7 +54,7 @@ export class Tank {
     #selected_fish = null;
     #dirt_level = 0;
     #care_timer = null;
-    #last_care_time = performance.now();
+    #last_care_time = Date.now();
     #last_spray_visual_time = 0;
 
     constructor({ element, entity_layer, on_fish_hatched, on_status_change, on_fish_selected }) {
@@ -64,6 +74,163 @@ export class Tank {
             && client_x <= bounds.right
             && client_y >= bounds.top
             && client_y <= bounds.bottom;
+    }
+
+    catch_up() {
+        return this.#update_care();
+    }
+
+    get_state() {
+        return {
+            dirt_level: this.#dirt_level,
+            substrate_id: this.#substrate_type?.id ?? null,
+            eggs: Array.from(this.#eggs, (egg) => egg.get_state()),
+            fish: Array.from(this.#fish, (fish) => fish.get_state()),
+            food: Array.from(this.#food, (pellet) => pellet.get_state()),
+            sponges: Array.from(this.#sponges, (sponge) => sponge.get_state()),
+            decorations: Array.from(this.#decorations, (decoration) => decoration.get_state())
+        };
+    }
+
+    restore_state(state, offline_ms = 0) {
+        if (!state || typeof state !== "object") {
+            return { offline_seconds: 0, hatched_fish_types: [] };
+        }
+
+        const safe_offline_ms = Math.max(0, Number.isFinite(offline_ms) ? offline_ms : 0);
+        const saved_dirt_level = Number(state.dirt_level);
+        this.#dirt_level = Number.isFinite(saved_dirt_level)
+            ? Math.max(0, Math.min(100, saved_dirt_level))
+            : 0;
+
+        const substrate_type = SUBSTRATES_BY_ID.get(state.substrate_id);
+        if (substrate_type) {
+            this.#apply_substrate_type(substrate_type);
+        }
+
+        for (const decoration_state of Array.isArray(state.decorations) ? state.decorations : []) {
+            const decoration_type = DECORATIONS_BY_ID.get(decoration_state?.decoration_id);
+            if (!decoration_type) {
+                continue;
+            }
+            const decoration = new TankDecoration({
+                decoration_type,
+                parent: this.#element,
+                x: Number.isFinite(decoration_state.x) ? decoration_state.x : this.#element.clientWidth * 0.5
+            });
+            this.#decorations.add(decoration);
+            decoration.mount();
+        }
+
+        for (const sponge_state of Array.isArray(state.sponges) ? state.sponges : []) {
+            if (!Number.isFinite(sponge_state?.uses_remaining) || sponge_state.uses_remaining <= 0) {
+                continue;
+            }
+            const bounds = this.#element.getBoundingClientRect();
+            const sponge = new TankSponge({
+                parent: this.#element,
+                x: Math.max(24, Math.min(bounds.width - 24, Number(sponge_state.x) || 24)),
+                y: Math.max(24, Math.min(bounds.height - 24, Number(sponge_state.y) || 24)),
+                uses_remaining: sponge_state.uses_remaining,
+                on_scrub: (scrub) => this.#scrub_with_sponge(scrub),
+                on_exhausted: (spent_sponge) => this.#remove_sponge(spent_sponge)
+            });
+            this.#sponges.add(sponge);
+            sponge.mount();
+        }
+
+        for (const fish_state of Array.isArray(state.fish) ? state.fish : []) {
+            const fish_type = FISH_SPECIES_BY_ID.get(fish_state?.species_id);
+            if (!fish_type) {
+                continue;
+            }
+            this.#add_fish(fish_type, {
+                start_x: Number(fish_state.x) || 80,
+                start_y: Number(fish_state.y) || 80,
+                state: fish_state,
+                emit_status: false
+            });
+        }
+
+        const saved_food = Array.isArray(state.food) ? state.food : [];
+        if (safe_offline_ms > 0 && this.#fish.size > 0 && saved_food.length > 0) {
+            this.#consume_saved_food(saved_food);
+        } else {
+            for (const pellet_state of saved_food) {
+                if (!Number.isFinite(pellet_state?.x) || !Number.isFinite(pellet_state?.y)) {
+                    continue;
+                }
+                const pellet = new FoodPellet({
+                    parent: this.#entity_layer,
+                    x: pellet_state.x,
+                    y: pellet_state.y,
+                    nutrition: Number.isFinite(pellet_state.nutrition) ? pellet_state.nutrition : 15
+                });
+                this.#food.add(pellet);
+                pellet.mount();
+            }
+        }
+
+        const egg_states = Array.isArray(state.eggs) ? state.eggs : [];
+        const hatch_events = [];
+        const eggs_still_waiting = [];
+        for (const egg_state of egg_states) {
+            const egg_type = EGG_TYPES_BY_ID.get(egg_state?.egg_type_id);
+            if (!egg_type) {
+                continue;
+            }
+            const remaining_hatch_ms = Number.isFinite(egg_state.remaining_hatch_ms)
+                ? Math.max(0, egg_state.remaining_hatch_ms)
+                : egg_type.hatch_time_ms;
+            const normalized_state = {
+                egg_type,
+                x: Number.isFinite(egg_state.x) ? egg_state.x : this.#element.clientWidth * 0.5,
+                remaining_hatch_ms
+            };
+            if (remaining_hatch_ms <= safe_offline_ms) {
+                hatch_events.push(normalized_state);
+            } else {
+                eggs_still_waiting.push(normalized_state);
+            }
+        }
+
+        hatch_events.sort((a, b) => a.remaining_hatch_ms - b.remaining_hatch_ms);
+        const hatched_fish_types = [];
+        let simulated_until_ms = 0;
+        for (const hatch_event of hatch_events) {
+            this.#simulate_care((hatch_event.remaining_hatch_ms - simulated_until_ms) / 1000);
+            const fish_type = roll_fish_for_egg(hatch_event.egg_type);
+            this.#add_fish(fish_type, {
+                start_x: hatch_event.x,
+                start_y: Math.max(70, this.#entity_layer.clientHeight - this.#substrate_height - 95),
+                emit_status: false
+            });
+            hatched_fish_types.push(fish_type);
+            simulated_until_ms = hatch_event.remaining_hatch_ms;
+        }
+        this.#simulate_care((safe_offline_ms - simulated_until_ms) / 1000);
+
+        for (const waiting_egg of eggs_still_waiting) {
+            this.#mount_restored_egg(
+                waiting_egg.egg_type,
+                waiting_egg.x,
+                waiting_egg.remaining_hatch_ms - safe_offline_ms
+            );
+        }
+
+        this.#ensure_dirt_patches();
+        this.#sync_dirt_visuals();
+        for (const fish of this.#fish) {
+            fish.sync_visuals();
+        }
+        this.#assign_food_targets();
+        this.#last_care_time = Date.now();
+        this.#emit_status();
+
+        return {
+            offline_seconds: safe_offline_ms / 1000,
+            hatched_fish_types
+        };
     }
 
     drop_egg(egg_type, client_x, client_y) {
@@ -101,20 +268,7 @@ export class Tank {
             return false;
         }
 
-        this.#substrate_element?.remove();
-        const substrate = document.createElement("div");
-        substrate.className = `tank-substrate tank-substrate--${substrate_type.visual}`;
-        substrate.style.height = `${substrate_type.height_px}px`;
-        substrate.setAttribute("aria-label", substrate_type.name);
-        substrate.setAttribute("aria-hidden", "true");
-        this.#substrate_element = substrate;
-        this.#substrate_type = substrate_type;
-        this.#element.style.setProperty("--tank-substrate-height", `${substrate_type.height_px}px`);
-        this.#element.append(substrate);
-
-        for (const egg of this.#eggs) {
-            egg.set_bottom_offset(substrate_type.height_px);
-        }
+        this.#apply_substrate_type(substrate_type);
         return true;
     }
 
@@ -229,6 +383,53 @@ export class Tank {
         return this.#substrate_type?.height_px ?? 0;
     }
 
+    #apply_substrate_type(substrate_type) {
+        this.#substrate_element?.remove();
+        const substrate = document.createElement("div");
+        substrate.className = `tank-substrate tank-substrate--${substrate_type.visual}`;
+        substrate.style.height = `${substrate_type.height_px}px`;
+        substrate.setAttribute("aria-label", substrate_type.name);
+        substrate.setAttribute("aria-hidden", "true");
+        this.#substrate_element = substrate;
+        this.#substrate_type = substrate_type;
+        this.#element.style.setProperty("--tank-substrate-height", `${substrate_type.height_px}px`);
+        this.#element.append(substrate);
+
+        for (const egg of this.#eggs) {
+            egg.set_bottom_offset(substrate_type.height_px);
+        }
+    }
+
+    #mount_restored_egg(egg_type, x, remaining_hatch_ms) {
+        const bounds = this.#element.getBoundingClientRect();
+        const safe_x = Math.max(24, Math.min(bounds.width - 24, x));
+        const settled_y = Math.max(12, bounds.height - this.#substrate_height - 55);
+        const egg = new Egg({
+            egg_type,
+            parent: this.#entity_layer,
+            x: safe_x,
+            start_y: settled_y,
+            bottom_offset: this.#substrate_height,
+            remaining_hatch_ms,
+            on_hatch: (hatched_egg) => this.#hatch_fish(hatched_egg)
+        });
+        this.#eggs.add(egg);
+        egg.mount();
+    }
+
+    #consume_saved_food(food_states) {
+        const fish = Array.from(this.#fish);
+        if (fish.length === 0) {
+            return;
+        }
+
+        for (const pellet_state of food_states) {
+            const target = fish.reduce((hungriest, candidate) => candidate.hunger > hungriest.hunger ? candidate : hungriest, fish[0]);
+            target.feed(Number.isFinite(pellet_state?.nutrition) ? pellet_state.nutrition : 15);
+            this.#dirt_level = Math.min(100, this.#dirt_level + 0.18);
+        }
+    }
+
     #scrub_with_sponge({ start_x, start_y, end_x, end_y, max_patch_completions }) {
         if (this.#dirt_patches.size === 0 || max_patch_completions <= 0) {
             return { removed_dirt: 0, cleaned_patches: 0 };
@@ -277,20 +478,24 @@ export class Tank {
         sponge.destroy();
     }
 
-    #add_fish(fish_type, { start_x, start_y }) {
+    #add_fish(fish_type, { start_x, start_y, state = null, emit_status = true }) {
         const fish = new Fish({
             fish_type,
             parent: this.#entity_layer,
             start_x,
             start_y,
             starts_grown: false,
+            state,
             on_select: (selected_fish) => this.#select_fish(selected_fish),
             on_food_reached: (feeding_fish, food) => this.#eat_food(feeding_fish, food)
         });
         this.#fish.add(fish);
         fish.mount();
         this.#assign_food_targets();
-        this.#emit_status();
+        if (emit_status) {
+            this.#emit_status();
+        }
+        return fish;
     }
 
     #select_fish(fish) {
@@ -312,6 +517,22 @@ export class Tank {
             start_y: Math.max(70, this.#entity_layer.clientHeight - this.#substrate_height - 95)
         });
         this.#on_fish_hatched(fish_type);
+    }
+
+    #hatch_overdue_egg(egg) {
+        if (!this.#eggs.delete(egg)) {
+            return null;
+        }
+
+        egg.cancel();
+        const fish_type = roll_fish_for_egg(egg.egg_type);
+        this.#add_fish(fish_type, {
+            start_x: egg.x,
+            start_y: Math.max(70, this.#entity_layer.clientHeight - this.#substrate_height - 95),
+            emit_status: false
+        });
+        this.#on_fish_hatched(fish_type);
+        return fish_type;
     }
 
     #eat_food(fish, pellet) {
@@ -404,20 +625,69 @@ export class Tank {
         window.setTimeout(() => spray.remove(), 480);
     }
 
-    #update_care() {
-        const now = performance.now();
-        const delta_seconds = Math.min((now - this.#last_care_time) / 1000, 2);
-        this.#last_care_time = now;
+    #simulate_care(total_seconds) {
+        const safe_total_seconds = Math.max(0, Number.isFinite(total_seconds) ? total_seconds : 0);
+        if (safe_total_seconds <= 0) {
+            return;
+        }
+
+        const desired_steps = Math.max(1, Math.ceil(safe_total_seconds / TARGET_CATCH_UP_STEP_SECONDS));
+        const step_count = Math.min(MAX_CATCH_UP_STEPS, desired_steps);
+        const step_seconds = safe_total_seconds / step_count;
+        for (let step = 0; step < step_count; step += 1) {
+            this.#advance_care_step(step_seconds, false);
+        }
+    }
+
+    #simulate_elapsed_interval(start_ms, end_ms) {
+        const due_eggs = Array.from(this.#eggs)
+            .filter((egg) => Number.isFinite(egg.hatch_at_ms) && egg.hatch_at_ms <= end_ms)
+            .sort((a, b) => a.hatch_at_ms - b.hatch_at_ms);
+
+        let simulated_until_ms = start_ms;
+        for (const egg of due_eggs) {
+            if (!this.#eggs.has(egg)) {
+                continue;
+            }
+            const hatch_at_ms = Math.max(simulated_until_ms, Math.max(start_ms, egg.hatch_at_ms));
+            this.#simulate_care((hatch_at_ms - simulated_until_ms) / 1000);
+            this.#hatch_overdue_egg(egg);
+            simulated_until_ms = hatch_at_ms;
+        }
+        this.#simulate_care((end_ms - simulated_until_ms) / 1000);
+    }
+
+    #advance_care_step(delta_seconds, sync_fish_visuals) {
         const fish_count = this.#fish.size;
         if (fish_count > 0) {
             const dirt_rate = 0.035 + (fish_count * 0.035) + (Math.pow(fish_count, 1.3) * 0.012);
-            this.#add_dirt(dirt_rate * delta_seconds);
+            this.#dirt_level = Math.min(100, this.#dirt_level + (dirt_rate * delta_seconds));
         }
         for (const fish of this.#fish) {
-            fish.tick_care(delta_seconds, this.#dirt_level);
+            fish.tick_care(delta_seconds, this.#dirt_level, sync_fish_visuals);
         }
+    }
+
+    #update_care() {
+        const previous_care_time = this.#last_care_time;
+        const now = Date.now();
+        const delta_seconds = Math.max(0, (now - previous_care_time) / 1000);
+        this.#last_care_time = now;
+
+        if (delta_seconds <= 2) {
+            this.#advance_care_step(delta_seconds, true);
+        } else {
+            this.#simulate_elapsed_interval(previous_care_time, now);
+            for (const fish of this.#fish) {
+                fish.sync_visuals();
+            }
+        }
+
+        this.#ensure_dirt_patches();
+        this.#sync_dirt_visuals();
         this.#assign_food_targets();
         this.#emit_status();
+        return delta_seconds;
     }
 
     #sync_dirt_visuals() {

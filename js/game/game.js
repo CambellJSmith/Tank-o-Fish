@@ -1,16 +1,37 @@
-import { DECORATION_ITEMS } from "../data/decorations.js?v=20260825-2";
+import { DECORATION_ITEMS } from "../data/decorations.js?v=20260825-3";
 import { EGG_TYPES } from "../data/egg_types.js";
-import { SUBSTRATE_ITEMS } from "../data/substrates.js?v=20260825-2";
+import { SUBSTRATE_ITEMS } from "../data/substrates.js?v=20260825-3";
 import { SUPPLY_ITEMS } from "../data/supply_items.js";
-import { EggInventory } from "./egg_inventory.js";
+import { EggInventory } from "./egg_inventory.js?v=20260825-3";
 import { EggShop } from "./egg_shop.js";
 import { FishInfoPanel } from "./fish_info_panel.js";
-import { PlacementInventory } from "./placement_inventory.js?v=20260825-2";
+import { PlacementInventory } from "./placement_inventory.js?v=20260825-3";
 import { PlacementShop } from "./placement_shop.js?v=20260825-2";
+import { SaveSystem } from "./save_system.js?v=20260825-3";
 import { Shop } from "./shop.js";
-import { SupplyInventory } from "./supply_inventory.js";
+import { SupplyInventory } from "./supply_inventory.js?v=20260825-3";
 import { SupplyShop } from "./supply_shop.js";
-import { Tank } from "./tank.js?v=20260825-2";
+import { Tank } from "./tank.js?v=20260825-3";
+
+const EGG_TYPES_BY_ID = new Map(EGG_TYPES.map((egg_type) => [egg_type.id, egg_type]));
+
+function format_elapsed_time(total_seconds) {
+    const seconds = Math.max(0, Math.floor(total_seconds));
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0) {
+        return `${days}d_${hours}h`;
+    }
+    if (hours > 0) {
+        return `${hours}h_${minutes}m`;
+    }
+    if (minutes > 0) {
+        return `${minutes}m`;
+    }
+    return `${seconds}s`;
+}
 
 export class Game {
     #money = 80;
@@ -26,6 +47,8 @@ export class Game {
     #substrate_inventory;
     #fish_info_panel;
     #tank;
+    #save_system = new SaveSystem();
+    #save_timer = null;
     #encountered_species_ids = new Set();
     #cleanliness_meter;
     #cleanliness_value;
@@ -126,7 +149,11 @@ export class Game {
             on_purchase: (item) => this.#purchase_substrate(item)
         });
 
+        const restore_summary = this.#restore_game();
         this.#sync_money();
+        this.#install_persistence_handlers();
+        this.#save_game();
+        this.#announce_restore_summary(restore_summary);
     }
 
     #purchase_egg(egg_type) {
@@ -138,6 +165,7 @@ export class Game {
         this.#money -= egg_type.price;
         this.#inventory.add_egg(egg_type);
         this.#sync_money();
+        this.#save_soon();
         this.#announce(`${egg_type.name}_added_to_your_tray.`);
     }
 
@@ -150,6 +178,7 @@ export class Game {
         this.#money -= item.price;
         this.#supply_inventory.add(item.id);
         this.#sync_money();
+        this.#save_soon();
         this.#announce(`${item.name}_added_to_your_supplies.`);
     }
 
@@ -162,6 +191,7 @@ export class Game {
         this.#money -= item.price;
         this.#decoration_inventory.add(item.id);
         this.#sync_money();
+        this.#save_soon();
         this.#announce(`${item.name}_added_to_decoration_inventory.`);
     }
 
@@ -174,11 +204,13 @@ export class Game {
         this.#money -= item.price;
         this.#substrate_inventory.add(item.id);
         this.#sync_money();
+        this.#save_soon();
         this.#announce(`${item.name}_bag_added_to_inventory.`);
     }
 
     #drop_egg(egg_type, client_x, client_y) {
         this.#tank.drop_egg(egg_type, client_x, client_y);
+        this.#save_soon();
         this.#announce(`${egg_type.name}_is_settling_into_the_tank.`);
     }
 
@@ -187,6 +219,7 @@ export class Game {
             this.#announce("drop_the_decoration_inside_the_tank.");
             return false;
         }
+        this.#save_soon();
         this.#announce(`${item.name}_placed._drag_it_again_any_time_to_reposition_it.`);
         return true;
     }
@@ -196,6 +229,7 @@ export class Game {
             this.#announce("drop_the_substrate_bag_inside_the_tank.");
             return false;
         }
+        this.#save_soon();
         this.#announce(`${item.name}_installed_as_the_tank_bottom.`);
         return true;
     }
@@ -208,6 +242,7 @@ export class Game {
 
         this.#money += sold_fish.sale_value;
         this.#sync_money();
+        this.#save_soon();
         this.#announce(`${sold_fish.name}_sold_for_${sold_fish.sale_value}_coins.`);
     }
 
@@ -235,6 +270,7 @@ export class Game {
             return {};
         }
 
+        this.#save_soon();
         this.#announce(`food_dropped._${pellet_count}_pellets_scattered.`);
         return { consume: true, had_effect: true };
     }
@@ -250,6 +286,7 @@ export class Game {
             return {};
         }
 
+        this.#save_soon();
         this.#announce(`sponge_placed._${uses_remaining}_dirt_patches_remaining.`);
         return { consume: true, had_effect: true };
     }
@@ -274,6 +311,7 @@ export class Game {
         }
 
         if (interaction.phase === "drop" && interaction.consumed) {
+            this.#save_soon();
             if (interaction.effect_count > 0) {
                 this.#announce(`medicine_spray_cured_${interaction.effect_count}_fish.`);
             } else {
@@ -286,6 +324,7 @@ export class Game {
     #handle_fish_hatched(fish_type) {
         const is_new_species = !this.#encountered_species_ids.has(fish_type.species_id);
         this.#encountered_species_ids.add(fish_type.species_id);
+        this.#save_soon();
 
         if (is_new_species) {
             this.#announce(`new_species_discovered!_${fish_type.name}`);
@@ -293,6 +332,83 @@ export class Game {
         }
 
         this.#announce(`${fish_type.name}_hatched_again.`);
+    }
+
+    #restore_game() {
+        const save = this.#save_system.load();
+        if (!save) {
+            return null;
+        }
+
+        if (Number.isFinite(save.money)) {
+            this.#money = Math.max(0, save.money);
+        }
+        this.#encountered_species_ids = new Set(
+            Array.isArray(save.encountered_species_ids) ? save.encountered_species_ids : []
+        );
+
+        const saved_egg_types = (Array.isArray(save.egg_inventory) ? save.egg_inventory : [])
+            .map((egg_type_id) => EGG_TYPES_BY_ID.get(egg_type_id))
+            .filter(Boolean);
+        this.#inventory.restore_state(saved_egg_types);
+        this.#supply_inventory.restore_state(save.supply_inventory);
+        this.#decoration_inventory.restore_state(save.decoration_inventory);
+        this.#substrate_inventory.restore_state(save.substrate_inventory);
+
+        const offline_ms = Math.max(0, Date.now() - save.saved_at);
+        const tank_summary = this.#tank.restore_state(save.tank, offline_ms);
+        for (const fish_type of tank_summary.hatched_fish_types) {
+            this.#encountered_species_ids.add(fish_type.species_id);
+        }
+        return tank_summary;
+    }
+
+    #save_game() {
+        this.#tank.catch_up();
+        this.#save_system.save({
+            money: this.#money,
+            encountered_species_ids: Array.from(this.#encountered_species_ids),
+            egg_inventory: this.#inventory.get_state(),
+            supply_inventory: this.#supply_inventory.get_state(),
+            decoration_inventory: this.#decoration_inventory.get_state(),
+            substrate_inventory: this.#substrate_inventory.get_state(),
+            tank: this.#tank.get_state()
+        });
+    }
+
+    #save_soon() {
+        queueMicrotask(() => this.#save_game());
+    }
+
+    #install_persistence_handlers() {
+        this.#save_timer = window.setInterval(() => this.#save_game(), 3000);
+        window.addEventListener("pagehide", () => this.#save_game());
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                this.#save_game();
+                return;
+            }
+
+            const elapsed_seconds = this.#tank.catch_up();
+            if (elapsed_seconds >= 60) {
+                this.#announce(`tank_caught_up_${format_elapsed_time(elapsed_seconds)}_while_you_were_away.`);
+            }
+            this.#save_game();
+        });
+    }
+
+    #announce_restore_summary(summary) {
+        if (!summary || summary.offline_seconds < 5) {
+            return;
+        }
+
+        const elapsed = format_elapsed_time(summary.offline_seconds);
+        const hatch_count = summary.hatched_fish_types.length;
+        if (hatch_count > 0) {
+            this.#announce(`welcome_back._${elapsed}_passed._${hatch_count}_eggs_hatched_while_you_were_away.`);
+            return;
+        }
+        this.#announce(`welcome_back._${elapsed}_passed_while_the_tank_kept_running.`);
     }
 
     #sync_money() {
