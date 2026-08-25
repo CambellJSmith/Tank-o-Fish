@@ -303,7 +303,6 @@ export class Game {
                 return {};
             }
 
-            this.#save_soon();
             return {
                 consume: true,
                 had_effect: result.cured_count > 0,
@@ -312,6 +311,7 @@ export class Game {
         }
 
         if (interaction.phase === "drop" && interaction.consumed) {
+            this.#save_soon();
             if (interaction.effect_count > 0) {
                 this.#announce(`medicine_spray_cured_${interaction.effect_count}_fish.`);
             } else {
@@ -364,6 +364,7 @@ export class Game {
     }
 
     #save_game() {
+        this.#tank.catch_up();
         this.#save_system.save({
             money: this.#money,
             encountered_species_ids: Array.from(this.#encountered_species_ids),
